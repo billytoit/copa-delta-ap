@@ -1,0 +1,4 @@
+        if (selectedMatchIdForVeedor) {
+            const m = matches.find(m => m.id === selectedMatchIdForVeedor);
+            return <VeedorMatchRegistration match={m} teams={teams} user={user} onBack={() => setSelectedMatchIdForVeedor(null)} onSaveResult={handleSaveMatchResult} onStartMatch={(matchId, refereeData) => handleStartMatch(matchId, { ...refereeData, veedorId: user.id })} onRefresh={refreshData} />;
+        }
