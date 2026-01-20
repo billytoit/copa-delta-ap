@@ -1,6 +1,0 @@
-/*
-  Redirección para SPAs (Single Page Applications) en Netlify.
-  Esto asegura que si el usuario refresca la página en una ruta interna,
-  Netlify sirva el index.html en lugar de un error 404.
-*/
-/*  /index.html  200
