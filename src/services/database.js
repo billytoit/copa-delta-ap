@@ -37,44 +37,28 @@ export const getMatches = async (seasonId) => {
 }
 
 export const getTopScorers = async (seasonId) => {
-    // 1. Obtener todos los goles de la temporada actual
+    // OPTIMIZADO: Usar Vista SQL en lugar de cálculo en cliente
     const { data, error } = await supabase
-        .from('match_events')
-        .select(`
-            id,
-            player:players(id, name, nickname, photo_url, team:teams(id, name, color)),
-            match:matches!inner(season_id)
-        `)
-        .eq('event_type', 'goal')
-        .eq('matches.season_id', seasonId);
+        .from('view_top_scorers')
+        .select('*')
+        .eq('season_id', seasonId)
+        .order('goals', { ascending: false });
 
     if (error) {
-        console.error("Error fetching match events for scorers:", error);
+        console.error("Error fetching top scorers view:", error);
         throw error;
     }
 
-    // 2. Agrupar y contar goles por jugador
-    const scorersMap = (data || []).reduce((acc, event) => {
-        const player = event.player;
-        if (!player) return acc;
-
-        if (!acc[player.id]) {
-            acc[player.id] = {
-                id: player.id,
-                name: player.name,
-                nickname: player.nickname,
-                photo_url: player.photo_url,
-                teamName: player.team?.name || 'Sin Equipo',
-                teamColor: player.team?.color || 'var(--primary)',
-                goals: 0
-            };
-        }
-        acc[player.id].goals += 1;
-        return acc;
-    }, {});
-
-    // 3. Convertir a array y ordenar de mayor a menor
-    return Object.values(scorersMap).sort((a, b) => b.goals - a.goals);
+    // Mapear al formato que espera la UI
+    return data.map(row => ({
+        id: row.player_id,
+        name: row.name,
+        nickname: row.nickname,
+        photo_url: row.photo_url,
+        teamName: row.team_name || 'Sin Equipo',
+        teamColor: row.team_color || 'var(--primary)',
+        goals: row.goals
+    }));
 }
 
 export const createMatchEvent = async (event) => {

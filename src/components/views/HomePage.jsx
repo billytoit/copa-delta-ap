@@ -1,0 +1,82 @@
+import React from 'react';
+import { Shield, Edit3 } from 'lucide-react';
+import AdminDashboard from '../admin/AdminDashboard.jsx';
+import TeamManager from '../admin/TeamManager.jsx';
+import SocialBanner from '../shared/SocialBanner.jsx';
+import GoleadoresWidget from './GoleadoresWidget.jsx';
+
+const HomePage = ({ user, onSelectPlayer, teams, officials = [], matches, topScorers = [], onUpdatePlayer, onAddPlayer, handleUpdateTeam, onSelectMatch }) => {
+    // Find next match (first scheduled match)
+    // Assuming matches are roughly sorted or just taking the first 'scheduled' one.
+    const nextMatch = matches ? matches.find(m => (!m.status || m.status === 'scheduled')) : null;
+
+    return (
+        <div className="fade-in">
+            {/* Header moved to App level */}
+
+            {user.role === 'admin' ? (
+                <AdminDashboard user={user} teams={teams} officials={officials} onUpdatePlayer={onUpdatePlayer} onSelectPlayer={onSelectPlayer} onAddPlayer={onAddPlayer} onUpdateTeam={handleUpdateTeam} />
+            ) : user.role === 'operador' ? (
+                <TeamManager user={user} teamId={user.teamId} onSelectPlayer={onSelectPlayer} teams={teams} onAddPlayer={onAddPlayer} onUpdateTeam={handleUpdateTeam} />
+            ) : (
+                <>
+                    {/* Hide SocialBanner for Veedor */}
+                    {user.role !== 'official' && <SocialBanner />}
+
+                    {nextMatch && (
+                        <div
+                            className="glass-card"
+                            style={{
+                                marginBottom: 'var(--spacing-md)',
+                                cursor: (user.role === 'official') ? 'pointer' : 'default',
+                                transition: 'transform 0.2s',
+                                background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                                border: '1px solid var(--primary)'
+                            }}
+                            onClick={() => {
+                                if (user.role === 'official' && onSelectMatch) {
+                                    onSelectMatch(nextMatch.id);
+                                }
+                            }}
+                            onMouseEnter={(e) => {
+                                if (user.role === 'official') e.currentTarget.style.transform = 'scale(1.02)';
+                            }}
+                            onMouseLeave={(e) => {
+                                if (user.role === 'official') e.currentTarget.style.transform = 'scale(1)';
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>
+                                <h2 style={{ fontSize: '14px', color: 'var(--primary)', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                                    {user.role === 'official' ? 'Tu Próximo Partido' : 'Próximo Partido'}
+                                </h2>
+                                {user.role === 'official' && <Edit3 size={14} color="var(--primary)" />}
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ textAlign: 'center', flex: 1 }}>
+                                    <div style={{ width: '50px', height: '50px', background: 'var(--glass)', borderRadius: 'var(--radius-sm)', margin: '0 auto 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
+                                        <Shield size={24} color="#CB3524" /> {/* Placeholder color if no team color in match data */}
+                                    </div>
+                                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{nextMatch.teamA}</span>
+                                </div>
+                                <div style={{ fontSize: '16px', fontWeight: '800', opacity: 0.5, padding: '0 10px' }}>VS</div>
+                                <div style={{ textAlign: 'center', flex: 1 }}>
+                                    <div style={{ width: '50px', height: '50px', background: 'var(--glass)', borderRadius: 'var(--radius-sm)', margin: '0 auto 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
+                                        <Shield size={24} color="#034694" />
+                                    </div>
+                                    <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{nextMatch.teamB}</span>
+                                </div>
+                            </div>
+                            <div style={{ textAlign: 'center', marginTop: 'var(--spacing-md)', fontSize: '11px', color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '4px' }}>
+                                {nextMatch.date} - {nextMatch.time}
+                            </div>
+                        </div>
+                    )}
+
+                    <GoleadoresWidget onSelectPlayer={onSelectPlayer} teams={teams} scorers={topScorers} />
+                </>
+            )}
+        </div>
+    );
+};
+
+export default HomePage;
