@@ -2,6 +2,7 @@ import React from 'react';
 import { Trophy, FileText, Download, LogOut } from 'lucide-react';
 
 const SettingsView = ({ teams, onLogout }) => {
+    const BUILD_VERSION = "22/1/2026, 00:38 AM"; // Hardcoded for reliability
     return (
         <div className="fade-in">
             <h1 className="title-gradient" style={{ marginBottom: '20px' }}>Ajustes</h1>
@@ -61,7 +62,7 @@ const SettingsView = ({ teams, onLogout }) => {
             </div>
 
             <p style={{ textAlign: 'center', color: 'var(--text-secondary)', fontSize: '10px', marginTop: 'var(--spacing-xl)' }}>
-                Copa Delta App v1.4.0 • 2026
+                Copa Delta App v1.5 • {BUILD_VERSION}
             </p>
         </div>
     );
