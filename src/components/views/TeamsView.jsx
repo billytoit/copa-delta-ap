@@ -117,10 +117,22 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
                 <div className="fade-in">
                     <button
                         onClick={() => navigate('/teams')}
-                        style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '20px', cursor: 'pointer', fontSize: '14px' }}
+                        style={{
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            borderRadius: '50%',
+                            width: '40px',
+                            height: '40px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            cursor: 'pointer',
+                            backdropFilter: 'blur(10px)',
+                            marginBottom: '20px'
+                        }}
                     >
-                        <ChevronLeft size={18} />
-                        Volver al listado
+                        <ChevronLeft size={24} />
                     </button>
 
                     <div className="glass-card" style={{ textAlign: 'center', marginBottom: 'var(--spacing-xl)', padding: '0', overflow: 'hidden', position: 'relative' }}>

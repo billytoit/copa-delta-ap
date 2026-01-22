@@ -45,9 +45,21 @@ const UniversalProfileView = ({ profileId, onBack, user, teams, officials = [], 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
                 <button
                     onClick={onBack}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}
+                    style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '50%',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(10px)'
+                    }}
                 >
-                    <ChevronLeft size={24} /> Volver
+                    <ChevronLeft size={24} />
                 </button>
 
                 {/* Status Badge */}

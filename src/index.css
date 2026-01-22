@@ -130,15 +130,21 @@ body {
     animation: rotation 1s linear infinite;
 }
 
+/* Rotation Animation */
 @keyframes rotation {
-    0% {
+    from {
         transform: rotate(0deg);
     }
 
-    100% {
-        transform: rotate(360deg);
+    to {
+        transform: rotate(359deg);
     }
 }
+
+.spin-slow {
+    animation: rotation 2s infinite linear;
+}
+
 
 /* Utility for clickable table rows */
 .clickable-row {

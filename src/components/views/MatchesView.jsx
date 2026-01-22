@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Edit3 } from 'lucide-react';
+import { Edit3, Share2 } from 'lucide-react';
 import MatchTimer from '../shared/MatchTimer.jsx';
 import { LIBRES_2026 } from '../../data.js';
+import { shareMatchOnWhatsApp } from '../../utils/share.js';
 
 const MatchesView = ({ matches, user, onSelectMatch }) => {
     const [selectedDateFilter, setSelectedDateFilter] = useState('');
@@ -135,14 +136,33 @@ const MatchesView = ({ matches, user, onSelectMatch }) => {
                             <div key={m.id} className="glass-card" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
                                 <div style={{ background: 'rgba(255,255,255,0.03)', padding: '8px 15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)' }}>
                                     <span style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-secondary)' }}>Grupo {m.group} - {m.time}</span>
-                                    <span style={{
-                                        fontSize: '10px',
-                                        color: (m.status === 'finished' || m.time === 'Finalizado') ? '#ef4444' : (m.status === 'playing' ? '#22c55e' : 'white'),
-                                        fontWeight: 'bold',
-                                        textTransform: 'uppercase'
-                                    }}>
-                                        {m.status === 'playing' ? <MatchTimer startedAt={m.startedAt} /> : (m.status === 'finished' ? 'Finalizado' : 'Programado')}
-                                    </span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{
+                                            fontSize: '10px',
+                                            color: (m.status === 'finished' || m.time === 'Finalizado') ? '#ef4444' : (m.status === 'playing' ? '#22c55e' : 'white'),
+                                            fontWeight: 'bold',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {m.status === 'playing' ? <MatchTimer startedAt={m.startedAt} /> : (m.status === 'finished' ? 'Finalizado' : 'Programado')}
+                                        </span>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); shareMatchOnWhatsApp(m); }}
+                                            style={{
+                                                background: 'none',
+                                                border: '1px solid rgba(255,255,255,0.2)',
+                                                borderRadius: '50%',
+                                                width: '28px',
+                                                height: '28px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                cursor: 'pointer',
+                                                color: 'white'
+                                            }}
+                                        >
+                                            <Share2 size={14} />
+                                        </button>
+                                    </div>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 15px' }}>
                                     <div style={{ flex: 1, textAlign: 'right', fontSize: '14px', fontWeight: '700' }}>{m.teamA}</div>

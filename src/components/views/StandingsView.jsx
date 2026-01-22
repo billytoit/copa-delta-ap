@@ -4,10 +4,33 @@ import { GROUPS } from '../../data.js';
 
 const StandingsView = ({ teams }) => {
     const navigate = useNavigate();
+
+    // Dynamic grouping logic with fallback to legacy data.js
+    const standingsData = React.useMemo(() => {
+        const hasDynamicGroups = teams.some(t => t.group);
+
+        if (hasDynamicGroups) {
+            // Group by DB data
+            const groupsMap = {};
+            teams.forEach(t => {
+                const gName = t.group?.name || 'Sin Grupo';
+                if (!groupsMap[gName]) groupsMap[gName] = { name: gName, teamObjects: [] };
+                groupsMap[gName].teamObjects.push(t);
+            });
+            return Object.values(groupsMap).sort((a, b) => a.name.localeCompare(b.name));
+        }
+
+        // Fallback: Use hardcoded GROUPS and map IDs to objects
+        return GROUPS.map(g => ({
+            name: g.name,
+            teamObjects: g.teams.map(tid => teams.find(t => t.id === tid)).filter(Boolean)
+        }));
+    }, [teams]);
+
     return (
         <div className="fade-in">
             <h1 className="title-gradient" style={{ marginBottom: '20px' }}>Posiciones</h1>
-            {GROUPS.map(group => (
+            {standingsData.map(group => (
                 <div key={group.name} style={{ marginBottom: 'var(--spacing-lg)' }}>
                     <h3 style={{ fontSize: '16px', marginBottom: 'var(--spacing-sm)', color: 'var(--primary)' }}>{group.name}</h3>
                     <div className="glass-card" style={{ padding: '0' }}>
@@ -22,9 +45,7 @@ const StandingsView = ({ teams }) => {
                                 </tr>
                             </thead>
                             <tbody style={{ fontSize: '13px' }}>
-                                {group.teams
-                                    .map(teamId => teams.find(t => t.id === teamId))
-                                    .filter(t => !!t)
+                                {group.teamObjects
                                     .sort((a, b) => {
                                         if ((b.stats?.pts || 0) !== (a.stats?.pts || 0)) {
                                             return (b.stats?.pts || 0) - (a.stats?.pts || 0);
@@ -39,7 +60,7 @@ const StandingsView = ({ teams }) => {
                                                 onClick={() => navigate(`/teams/${team.id}`)}
                                                 className="clickable-row"
                                                 style={{
-                                                    borderBottom: idx < group.teams.length - 1 ? '1px solid var(--glass-border)' : 'none'
+                                                    borderBottom: idx < group.teamObjects.length - 1 ? '1px solid var(--glass-border)' : 'none'
                                                 }}
                                             >
                                                 <td style={{ padding: '10px' }}>{idx + 1}</td>

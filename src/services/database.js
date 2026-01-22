@@ -15,7 +15,8 @@ export const getTeams = async () => {
         .from('teams')
         .select(`
             *,
-            players(*)
+            players(*),
+            group:groups(*)
         `)
     if (error) throw error
     return data

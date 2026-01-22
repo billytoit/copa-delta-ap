@@ -14,7 +14,7 @@ export const TEAMS_2026 = [
     { id: 13, name: 'Los Angeles FC', color: '#000000' },
     { id: 14, name: 'Pachuca', color: '#004A99' },
     { id: 15, name: 'Porto', color: '#005CA9' },
-    { id: 16, name: 'Paris Saint‑Germain', color: '#004170' },
+    { id: 16, name: 'Paris Saint-Germain', color: '#004170' },
     { id: 17, name: 'Red Bull Salzburg', color: '#B3012F' },
     { id: 18, name: 'Seattle', color: '#5D9741' }
 ];

@@ -130,7 +130,21 @@ const AdminDashboard = ({ user, teams, officials = [], onUpdatePlayer, onSelectP
                             <div>
                                 <button
                                     onClick={() => setViewTeamId(null)}
-                                    style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '20px', cursor: 'pointer', fontSize: '14px' }}
+                                    style={{
+                                        background: 'rgba(255, 255, 255, 0.1)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        borderRadius: '20px',
+                                        padding: '10px 20px',
+                                        color: 'white',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        marginBottom: '20px',
+                                        cursor: 'pointer',
+                                        fontSize: '14px',
+                                        fontWeight: '600',
+                                        backdropFilter: 'blur(10px)'
+                                    }}
                                 >
                                     <ChevronLeft size={18} />
                                     Volver a Equipos
