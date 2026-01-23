@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { Home, Calendar, Trophy, Users, Vote, Shield, X, LogOut } from 'lucide-react';
-import Login from './Login.jsx';
-import DemoLogin from './components/views/DemoLogin.jsx';
+import Login from './components/views/Login.jsx';
+// import DemoLogin from './components/views/DemoLogin.jsx'; // Deprecated using Real Auth
 import './index.css';
 
 // Context
@@ -19,6 +19,7 @@ import TeamsView from './components/views/TeamsView.jsx';
 import VotingView from './components/views/VotingView.jsx';
 import SettingsView from './components/views/SettingsView.jsx';
 import VeedorMatchRegistration from './components/views/VeedorMatchRegistration.jsx';
+import AccessPendingView from './components/views/AccessPendingView.jsx';
 import EditPlayerForm from './components/admin/EditPlayerForm.jsx';
 import UserProfileView from './components/profile/UserProfileView.jsx';
 import UniversalProfileView from './components/profile/UniversalProfileView.jsx';
@@ -26,13 +27,14 @@ import MatchDetailsPage from './components/views/MatchDetailsPage.jsx';
 import PlayerProfilePage from './components/views/PlayerProfilePage.jsx';
 
 // Services
-import { startMatch, updateMatchStatus, getPolls, createPoll, votePoll, closePoll, getUserParticipations, updatePlayer } from './services/database.js'; // Keep actions that modify state or aren't in context yet
+// Services
+import { startMatch, updateMatchStatus, getPolls, createPoll, votePoll, closePoll, getUserParticipations, updatePlayer, updateTeam } from './services/database.js'; // Keep actions that modify state or aren't in context yet
 import { supabase } from './lib/supabaseClient.js';
 
-const IS_DEMO_MODE = true;
+// const IS_DEMO_MODE = true; // DEPRECATED: Using Real Auth
 
 const App = () => {
-    const { user, login, logout, teams, matches, topScorers, officials, loading, refreshData } = useApp();
+    const { user, login, logout, teams, matches, topScorers, officials, loading, error, refreshData } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -54,15 +56,20 @@ const App = () => {
         loadPolls();
     }, [user]);
 
-    const handleLogin = (userData) => {
-        login(userData);
-        navigate('/');
-    };
+    // HandleLogin is no longer manually called from a demo form, 
+    // Auth state is handled by AppContext + Supabase listener.
+    // However, if we need to redirect after login, we can do it here or in Login component.
+    useEffect(() => {
+        if (!user && !loading && location.pathname !== '/login') {
+            // Optionally redirect to login if we had a dedicated route, 
+            // but currently we show Login component conditionally below.
+        }
+    }, [user, loading]);
 
-    const handleLogout = () => {
-        logout();
+    const handleLogout = async () => {
+        await logout();
         setShowLogoutModal(false);
-        navigate('/');
+        // Navigate or refresh handled by state change
     };
 
     // --- Interaction Handlers (Now just Navigation helpers or simple actions) ---
@@ -74,8 +81,14 @@ const App = () => {
         alert("Funcionalidad de agregar pendiente de migración a DB real");
     };
 
-    const handleUpdateTeam = (updatedTeam) => {
-        console.log("Update team", updatedTeam);
+    const handleUpdateTeam = async (updatedTeam) => {
+        try {
+            await updateTeam(updatedTeam.id, { logo_url: updatedTeam.logo_url, photo: updatedTeam.photo });
+            refreshData(true); // Silent refresh
+        } catch (e) {
+            console.error("Error updating team:", e);
+            alert("Error al actualizar equipo: " + e.message);
+        }
     };
 
     const handleVote = async (pollId, optionId) => {
@@ -108,19 +121,46 @@ const App = () => {
         );
     }
 
+    if (loading === false && error) {
+        return (
+            <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-color)', color: 'white', padding: '20px', textAlign: 'center' }}>
+                <p style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '10px' }}>⚠️ Algo salió mal</p>
+                <p style={{ opacity: 0.8, marginBottom: '20px' }}>{error}</p>
+                <button
+                    onClick={() => window.location.reload()}
+                    style={{ padding: '10px 20px', background: 'var(--primary)', border: 'none', borderRadius: '8px', color: 'white' }}
+                >
+                    Reintentar
+                </button>
+            </div>
+        );
+    }
+
     if (!user) {
-        return IS_DEMO_MODE ? <DemoLogin onLogin={handleLogin} /> : <Login onLogin={handleLogin} />;
+        // Show Real Login Component
+        return <Login />;
+    }
+
+    // BLOCKING: Strict Access Control
+    // If user is logged in but role is 'pending', show the Bouncer Screen
+    if (user.role === 'pending') {
+        return <AccessPendingView />;
     }
 
     return (
         <div className="container" style={{ paddingBottom: '100px' }}>
             <GlobalHeader user={user} onSettingsClick={() => navigate('/settings')} onProfileClick={() => navigate('/profile')} />
+
+            {/* DEBUG OVERLAY - REMOVE AFTER FIXING */}
+            {/* REMOVED */}
+
+
             <ReloadPrompt />
 
             <Routes>
                 <Route path="/" element={<HomePage user={user} onSelectPlayer={onSelectPlayerShim} teams={teams} officials={officials} matches={matches} topScorers={topScorers} onUpdatePlayer={onUpdatePlayerShim} onAddPlayer={handleAddPlayer} onSelectMatch={onSelectMatchShim} />} />
                 <Route path="/home" element={<Navigate to="/" replace />} />
-                <Route path="/matches" element={<MatchesView matches={matches} user={user} onSelectMatch={onSelectMatchShim} />} />
+                <Route path="/matches" element={<MatchesView matches={matches} user={user} onSelectMatch={onSelectMatchShim} teams={teams} />} />
                 <Route path="/match/:id" element={<MatchDetailsPage />} />
 
                 <Route path="/standings" element={<StandingsView teams={teams} />} />

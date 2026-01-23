@@ -128,10 +128,10 @@ const VeedorMatchRegistration = ({ match, onBack, teams, onSaveResult, onStartMa
 
     useEffect(() => {
         let interval;
-        if (match.status === 'playing' && match.startedAt) {
+        if (match.status === 'playing' && match.started_at) {
             interval = setInterval(() => {
                 const now = Date.now();
-                const diff = Math.floor((now - match.startedAt) / 1000);
+                const diff = Math.floor((now - match.started_at) / 1000);
                 const minutes = Math.floor(diff / 60).toString().padStart(2, '0');
                 const seconds = (diff % 60).toString().padStart(2, '0');
                 setElapsedTime(`${minutes}:${seconds}`);
@@ -140,7 +140,7 @@ const VeedorMatchRegistration = ({ match, onBack, teams, onSaveResult, onStartMa
             setElapsedTime('00:00');
         }
         return () => clearInterval(interval);
-    }, [match.status, match.startedAt]);
+    }, [match.status, match.started_at]);
 
     useEffect(() => {
         if (showGoalForm || showCardForm) {

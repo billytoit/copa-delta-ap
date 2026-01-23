@@ -4,8 +4,15 @@ import MatchTimer from '../shared/MatchTimer.jsx';
 import { LIBRES_2026 } from '../../data.js';
 import { shareMatchOnWhatsApp } from '../../utils/share.js';
 
-const MatchesView = ({ matches, user, onSelectMatch }) => {
+const MatchesView = ({ matches, user, onSelectMatch, teams = [] }) => {
     const [selectedDateFilter, setSelectedDateFilter] = useState('');
+
+    const teamLogos = React.useMemo(() => {
+        return teams.reduce((acc, t) => {
+            acc[t.name] = t.logo_url;
+            return acc;
+        }, {});
+    }, [teams]);
 
     const grouped = (matches || []).reduce((acc, m) => {
         if (!acc[m.date]) acc[m.date] = { date: m.date, raw: m.rawDate, matches: [] };
@@ -165,11 +172,17 @@ const MatchesView = ({ matches, user, onSelectMatch }) => {
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 15px' }}>
-                                    <div style={{ flex: 1, textAlign: 'right', fontSize: '14px', fontWeight: '700' }}>{m.teamA}</div>
+                                    <div style={{ flex: 1, textAlign: 'right', fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '8px' }}>
+                                        {m.teamA}
+                                        {teamLogos[m.teamA] && <img src={teamLogos[m.teamA]} alt="" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />}
+                                    </div>
                                     <div style={{ margin: '0 15px', display: 'flex', alignItems: 'center' }}>
                                         <div style={{ padding: '6px 12px', background: 'var(--glass)', borderRadius: '6px', fontWeight: '800', fontSize: '16px', border: '1px solid var(--glass-border)' }}>{m.score}</div>
                                     </div>
-                                    <div style={{ flex: 1, fontSize: '14px', fontWeight: '700' }}>{m.teamB}</div>
+                                    <div style={{ flex: 1, fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '8px' }}>
+                                        {teamLogos[m.teamB] && <img src={teamLogos[m.teamB]} alt="" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />}
+                                        {m.teamB}
+                                    </div>
                                 </div>
 
                                 <div style={{ padding: '0 15px 15px' }}>

@@ -181,6 +181,19 @@ export const updateOfficial = async (id, updates) => {
     return data;
 }
 
+export const updateTeam = async (id, updates) => {
+    // Separate team updates from player updates? 
+    // Usually 'updates' here refers to team fields like logo_url
+    const { data, error } = await supabase
+        .from('teams')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+    if (error) throw error;
+    return data;
+}
+
 // ----------------------------------------------------
 // SISTEMA DE VOTACIONES (POLLS)
 // ----------------------------------------------------

@@ -1,30 +1,18 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GROUPS } from '../../data.js';
-
 const StandingsView = ({ teams }) => {
     const navigate = useNavigate();
 
-    // Dynamic grouping logic with fallback to legacy data.js
+    // Dynamic grouping logic
     const standingsData = React.useMemo(() => {
-        const hasDynamicGroups = teams.some(t => t.group);
-
-        if (hasDynamicGroups) {
-            // Group by DB data
-            const groupsMap = {};
-            teams.forEach(t => {
-                const gName = t.group?.name || 'Sin Grupo';
-                if (!groupsMap[gName]) groupsMap[gName] = { name: gName, teamObjects: [] };
-                groupsMap[gName].teamObjects.push(t);
-            });
-            return Object.values(groupsMap).sort((a, b) => a.name.localeCompare(b.name));
-        }
-
-        // Fallback: Use hardcoded GROUPS and map IDs to objects
-        return GROUPS.map(g => ({
-            name: g.name,
-            teamObjects: g.teams.map(tid => teams.find(t => t.id === tid)).filter(Boolean)
-        }));
+        // Group by DB data
+        const groupsMap = {};
+        teams.forEach(t => {
+            const gName = t.group?.name || 'Sin Grupo';
+            if (!groupsMap[gName]) groupsMap[gName] = { name: gName, teamObjects: [] };
+            groupsMap[gName].teamObjects.push(t);
+        });
+        return Object.values(groupsMap).sort((a, b) => a.name.localeCompare(b.name));
     }, [teams]);
 
     return (
@@ -64,7 +52,14 @@ const StandingsView = ({ teams }) => {
                                                 }}
                                             >
                                                 <td style={{ padding: '10px' }}>{idx + 1}</td>
-                                                <td style={{ padding: '10px', fontWeight: '600' }}>{team.name}</td>
+                                                <td style={{ padding: '10px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        {team.logo_url && (
+                                                            <img src={team.logo_url} alt="" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+                                                        )}
+                                                        <span style={{ fontWeight: '600' }}>{team.name}</span>
+                                                    </div>
+                                                </td>
                                                 <td style={{ padding: '10px', textAlign: 'center' }}>{stats.pj}</td>
                                                 <td style={{ padding: '10px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '11px' }}>{stats.dg >= 0 ? `+${stats.dg}` : stats.dg}</td>
                                                 <td style={{ padding: '10px', textAlign: 'center', color: 'var(--primary)', fontWeight: 'bold' }}>{stats.pts}</td>

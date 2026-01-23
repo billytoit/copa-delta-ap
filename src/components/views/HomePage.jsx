@@ -28,21 +28,21 @@ const HomePage = ({ user, onSelectPlayer, teams, officials = [], matches, topSco
                             className="glass-card"
                             style={{
                                 marginBottom: 'var(--spacing-md)',
-                                cursor: (user.role === 'official') ? 'pointer' : 'default',
+                                cursor: 'pointer',
                                 transition: 'transform 0.2s',
                                 background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
                                 border: '1px solid var(--primary)'
                             }}
                             onClick={() => {
-                                if (user.role === 'official' && onSelectMatch) {
+                                if (onSelectMatch) {
                                     onSelectMatch(nextMatch.id);
                                 }
                             }}
                             onMouseEnter={(e) => {
-                                if (user.role === 'official') e.currentTarget.style.transform = 'scale(1.02)';
+                                e.currentTarget.style.transform = 'scale(1.02)';
                             }}
                             onMouseLeave={(e) => {
-                                if (user.role === 'official') e.currentTarget.style.transform = 'scale(1)';
+                                e.currentTarget.style.transform = 'scale(1)';
                             }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>

@@ -14,6 +14,87 @@ export const AppProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // --- Authentication Logic (Supabase Real Auth) ---
+    useEffect(() => {
+        // 1. Check active session
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            fetchUserRole(session?.user);
+        });
+
+        // 2. Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            fetchUserRole(session?.user);
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const fetchUserRole = async (authUser) => {
+        if (!authUser) {
+            setUser(null);
+            return;
+        }
+
+        try {
+            // 1. Fetch Role (Critical)
+            const { data: roleData, error: roleError } = await supabase
+                .from('user_roles')
+                .select('role')
+                .eq('user_id', authUser.id)
+                .maybeSingle(); // Use maybeSingle to avoid error on no rows
+
+            const role = roleData?.role || 'pending';
+
+            // 2. Fetch Profile (Optional - might not exist yet)
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', authUser.id)
+                .maybeSingle();
+
+            const profile = profileData || {};
+
+            // 3. Fetch Player Record (to get Team info)
+            const { data: playerData } = await supabase
+                .from('players')
+                .select('*, team:teams(*)')
+                .eq('profile_id', authUser.id)
+                .maybeSingle();
+
+            // Enrich user object
+            setUser({
+                ...authUser, // Spread authUser FIRST
+                id: authUser.id,
+                email: authUser.email,
+                role: role, // Explicit role overrides authUser.role
+                name: profile.full_name || authUser.email.split('@')[0],
+                avatar: profile.avatar_url,
+                // Merged Player Data
+                teamName: playerData?.team?.name,
+                teamId: playerData?.team_id,
+                teamColor: playerData?.team?.color,
+                number: playerData?.number,
+                playerId: playerData?.id,
+                ...profile,
+            });
+        } catch (err) {
+            console.error("Error fetching user data:", err);
+            // Fallback: If EVERYTHING fails, at least let them exist as pending
+            setUser({ id: authUser.id, email: authUser.email, role: 'pending' });
+        }
+    };
+
+    const login = async (email, password) => {
+        // Wrapper not strictly needed as we use direct Supabase calls in Login.jsx,
+        // but kept for compatibility if needed.
+        return supabase.auth.signInWithPassword({ email, password });
+    };
+
+    const logout = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+    };
+
     const refreshData = async (silent = false) => {
         try {
             if (!silent) setLoading(true);
@@ -28,7 +109,7 @@ export const AppProvider = ({ children }) => {
                     getOfficials()
                 ]);
 
-                // Process matches (calculate stats, etc.) - moved from App.jsx logic
+                // Process matches (calculate stats, etc.)
                 const formattedMatches = matchesData.map(m => {
                     const goalsA = (m.match_events || []).filter(e => e.event_type === 'goal' && e.team_id === m.team_a_id).length;
                     const goalsB = (m.match_events || []).filter(e => e.event_type === 'goal' && e.team_id === m.team_b_id).length;
@@ -46,7 +127,7 @@ export const AppProvider = ({ children }) => {
                     };
                 });
 
-                // Calculate Team Stats - logic from App.jsx
+                // Calculate Team Stats
                 const teamsWithStats = (teamsData || []).map(t => {
                     const teamMatches = formattedMatches.filter(m =>
                         (m.team_a_id === t.id || m.team_b_id === t.id) && m.status === 'finished'
@@ -82,38 +163,6 @@ export const AppProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    };
-
-    const login = async (userData) => {
-        // Fetch role from user_roles table
-        let role = 'guest'; // Default
-        try {
-            // Try to find role by email (since we use email in mock login or real auth)
-            // If using real auth uuid, use user_id
-            const { data: roleData } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('email', userData.email) // Assuming userData has email
-                .single();
-
-            if (roleData) {
-                role = roleData.role;
-            } else {
-                // Check if user is an official in the officials table (legacy check)
-                const isOfficial = officials.some(o => o.email === userData.email); // Need email in officials data?
-                // Fallback to existing logic if user_roles empty
-                role = userData.role || 'guest';
-            }
-        } catch (e) {
-            console.warn("Role fetch failed, using provided role", e);
-            role = userData.role;
-        }
-
-        setUser({ ...userData, role });
-    };
-
-    const logout = () => {
-        setUser(null);
     };
 
     useEffect(() => {

@@ -39,7 +39,8 @@ const MatchDetailsPage = () => {
             user={user}
             onBack={handleBack}
             onSaveResult={async (mid, score, attendance) => {
-                await updateMatchStatus(mid, { status: 'finished', score, attendance }); // attendance might need separate update logic if not in matches table, but keeping api consistent
+                await updateMatchStatus(mid, { status: 'finished' });
+                // Note: Score is calculated from events, attendance logic to be implemented in specific table if needed
                 await refreshData();
             }}
             onStartMatch={async (mid, refData) => {

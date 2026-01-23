@@ -38,6 +38,20 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
         }
     };
 
+    const handleLogoUpload = async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            try {
+                const publicUrl = await uploadImage(file, 'team-logos');
+                if (onUpdateTeam && selectedTeam) {
+                    onUpdateTeam({ ...selectedTeam, logo_url: publicUrl });
+                }
+            } catch (err) {
+                alert("Error subiendo escudo: " + err.message);
+            }
+        }
+    };
+
     return (
         <div className="fade-in">
             {!selectedTeamId ? (
@@ -102,9 +116,15 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        border: `2px solid ${team.color || 'var(--glass-border)'}`
+                                        border: `2px solid ${team.color || 'var(--glass-border)'}`,
+                                        overflow: 'hidden',
+                                        padding: '5px'
                                     }}>
-                                        <Shield size={32} color={team.color || 'var(--text-secondary)'} />
+                                        {team.logo_url ? (
+                                            <img src={team.logo_url} alt={team.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                        ) : (
+                                            <Shield size={32} color={team.color || 'var(--text-secondary)'} />
+                                        )}
                                     </div>
                                     <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>{team.name}</h3>
                                     <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Ver Plantilla</p>
@@ -140,14 +160,25 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
                             <div style={{ position: 'relative', height: '220px', width: '100%' }}>
                                 <img src={selectedTeam.photo} alt={selectedTeam.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.9), transparent)', padding: '20px', paddingTop: '60px' }}>
-                                    <h1 className="title-gradient" style={{ fontSize: '24px', marginBottom: '5px' }}>{selectedTeam.name}</h1>
+                                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '5px' }}>
+                                        {selectedTeam.logo_url && (
+                                            <img src={selectedTeam.logo_url} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', marginRight: '10px' }} />
+                                        )}
+                                        <h1 className="title-gradient" style={{ fontSize: '24px', margin: 0 }}>{selectedTeam.name}</h1>
+                                    </div>
                                     <p style={{ color: 'white', fontSize: '14px', opacity: 0.9 }}>Plantilla Oficial</p>
                                 </div>
                                 {((user?.role === 'admin') || (user?.role === 'operador')) && (
-                                    <label style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.6)', padding: '8px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
-                                        <Edit3 size={16} color="white" />
-                                        <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
-                                    </label>
+                                    <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '8px' }}>
+                                        <label style={{ background: 'rgba(0,0,0,0.6)', padding: '8px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+                                            <Shield size={16} color="white" />
+                                            <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+                                        </label>
+                                        <label style={{ background: 'rgba(0,0,0,0.6)', padding: '8px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+                                            <Edit3 size={16} color="white" />
+                                            <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
+                                        </label>
+                                    </div>
                                 )}
                             </div>
                         ) : (
@@ -162,16 +193,26 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     border: `3px solid ${selectedTeam.color}`,
-                                    position: 'relative'
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    padding: '5px'
                                 }}>
-                                    <Shield size={40} color={selectedTeam.color} />
+                                    {selectedTeam.logo_url ? (
+                                        <img src={selectedTeam.logo_url} alt={selectedTeam.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                    ) : (
+                                        <Shield size={40} color={selectedTeam.color} />
+                                    )}
                                 </div>
                                 <h1 className="title-gradient" style={{ fontSize: '24px', marginBottom: '8px' }}>{selectedTeam.name}</h1>
                                 <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Plantilla Oficial</p>
                                 {((user?.role === 'admin') || (user?.role === 'operador')) && (
-                                    <div style={{ marginTop: '15px' }}>
+                                    <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                                        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'var(--glass)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
+                                            <Shield size={14} /> Subir Escudo
+                                            <input type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+                                        </label>
                                         <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'var(--primary)', color: 'white', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>
-                                            <Edit3 size={14} /> Subir Foto de Equipo
+                                            <Edit3 size={14} /> Subir Foto
                                             <input type="file" accept="image/*" onChange={handlePhotoUpload} style={{ display: 'none' }} />
                                         </label>
                                     </div>
