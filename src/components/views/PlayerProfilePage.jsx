@@ -10,6 +10,10 @@ const PlayerProfilePage = () => {
     const navigate = useNavigate();
     const { user, teams, officials, refreshData } = useApp();
 
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [id]);
+
     // Internal state for editing (nested mode inside the page)
     const [isEditing, setIsEditing] = useState(false);
 

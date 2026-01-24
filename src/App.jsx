@@ -64,7 +64,13 @@ const App = () => {
             // Optionally redirect to login if we had a dedicated route, 
             // but currently we show Login component conditionally below.
         }
-    }, [user, loading]);
+
+        // Fix: User feedback "Always go to Home on entry".
+        // Specifically fixing the issue where users land on /settings after login/refresh.
+        if (user && !loading && location.pathname === '/settings') {
+            navigate('/', { replace: true });
+        }
+    }, [user, loading, location.pathname, navigate]);
 
     const handleLogout = async () => {
         await logout();
@@ -112,6 +118,15 @@ const App = () => {
         navigate(`/player/${p.id}`);
     };
 
+    const navigateHome = () => {
+        if (location.pathname === '/') {
+            // Force re-render/reset if already home
+            window.location.reload();
+        } else {
+            navigate('/');
+        }
+    };
+
     if (loading) {
         return (
             <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--bg-color)', color: 'white' }}>
@@ -149,7 +164,12 @@ const App = () => {
 
     return (
         <div className="container" style={{ paddingBottom: '100px' }}>
-            <GlobalHeader user={user} onSettingsClick={() => navigate('/settings')} onProfileClick={() => navigate('/profile')} />
+            <GlobalHeader
+                user={user}
+                onSettingsClick={() => navigate('/settings')}
+                onProfileClick={() => navigate('/profile')}
+                onHomeClick={navigateHome}
+            />
 
             {/* DEBUG OVERLAY - REMOVE AFTER FIXING */}
             {/* REMOVED */}
@@ -188,8 +208,8 @@ const App = () => {
             )}
 
             {/* Bottom Nav - Only show on main routes */}
-            {/* Bottom Nav - Only show on main routes (hide on detailed views) */}
-            {(!location.pathname.startsWith('/match/') && !location.pathname.startsWith('/player/')) && (
+            {/* Bottom Nav - Only show on main routes (hide on detailed views like match details, but SHOW on player profile as requested) */}
+            {(!location.pathname.startsWith('/match/')) && (
 
                 <div className="fade-in" style={{
                     position: 'fixed', bottom: '0', left: '0', width: '100%',

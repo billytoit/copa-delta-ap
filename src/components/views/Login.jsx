@@ -64,6 +64,40 @@ const Login = () => {
             </div>
 
             <div className="glass-card" style={{ width: '100%', maxWidth: '400px', padding: '30px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '20px' }}>
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            setLoading(true);
+                            const { error } = await supabase.auth.signInWithOAuth({
+                                provider: 'google',
+                                options: {
+                                    redirectTo: window.location.origin
+                                }
+                            });
+                            if (error) {
+                                setError(error.message);
+                                setLoading(false);
+                            }
+                        }}
+                        style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                            padding: '12px', background: 'white', color: '#333',
+                            border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold',
+                            cursor: 'pointer', transition: 'transform 0.2s'
+                        }}
+                    >
+                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="G" style={{ width: '20px', height: '20px' }} />
+                        Continuar con Google
+                    </button>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', opacity: 0.5 }}>
+                        <div style={{ height: '1px', flex: 1, background: 'white' }}></div>
+                        <span style={{ fontSize: '12px' }}>O ingresa con correo</span>
+                        <div style={{ height: '1px', flex: 1, background: 'white' }}></div>
+                    </div>
+                </div>
+
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
                     {error && (
@@ -125,13 +159,27 @@ const Login = () => {
                         {loading ? <Loader className="spin" size={20} /> : (isSignUp ? "Registrarse" : "Ingresar")}
                     </button>
 
-                    <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                    <div style={{ textAlign: 'center', marginTop: '25px', fontSize: '14px', color: 'rgba(255,255,255,0.6)' }}>
+                        {isSignUp ? "¿Ya tienes cuenta?" : "¿No tienes cuenta?"}{" "}
                         <button
                             type="button"
                             onClick={() => { setIsSignUp(!isSignUp); setError(null); }}
-                            style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', textDecoration: 'underline', cursor: 'pointer', fontSize: '14px' }}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'var(--primary)',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                padding: 0,
+                                marginLeft: '5px',
+                                textDecoration: 'none',
+                                transition: 'color 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
+                            onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
                         >
-                            {isSignUp ? "¿Ya tienes cuenta? Ingresa aquí" : "¿No tienes cuenta? Regístrate"}
+                            {isSignUp ? "Ingresa aquí" : "Regístrate"}
                         </button>
                     </div>
                 </form>

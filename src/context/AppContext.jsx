@@ -12,14 +12,19 @@ export const AppProvider = ({ children }) => {
     const [topScorers, setTopScorers] = useState([]);
     const [officials, setOfficials] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [authLoading, setAuthLoading] = useState(true); // Separate Auth Loading
     const [error, setError] = useState(null);
 
     // --- Authentication Logic (Supabase Real Auth) ---
     useEffect(() => {
         // 1. Check active session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            fetchUserRole(session?.user);
-        });
+        async function loadAuth() {
+            setAuthLoading(true);
+            const { data: { session } } = await supabase.auth.getSession();
+            await fetchUserRole(session?.user);
+            setAuthLoading(false);
+        }
+        loadAuth();
 
         // 2. Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -91,8 +96,17 @@ export const AppProvider = ({ children }) => {
     };
 
     const logout = async () => {
-        await supabase.auth.signOut();
-        setUser(null);
+        console.log("Logout initiated...");
+        try {
+            await supabase.auth.signOut();
+            console.log("Supabase signOut success");
+            setUser(null);
+            window.location.href = '/login'; // Force reload to login
+        } catch (e) {
+            console.error("Logout error:", e);
+            setUser(null);
+            window.location.reload();
+        }
     };
 
     const refreshData = async (silent = false) => {
@@ -173,7 +187,8 @@ export const AppProvider = ({ children }) => {
         <AppContext.Provider value={{
             user, login, logout,
             season, teams, matches, topScorers, officials,
-            loading, error, refreshData
+            loading: loading || authLoading, // Combined loading state
+            error, refreshData
         }}>
             {children}
         </AppContext.Provider>

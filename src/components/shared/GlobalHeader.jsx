@@ -1,7 +1,7 @@
 import React from 'react';
 import { User, Settings } from 'lucide-react';
 
-const GlobalHeader = ({ user, onSettingsClick, onProfileClick }) => {
+const GlobalHeader = ({ user, onSettingsClick, onProfileClick, onHomeClick }) => {
     const getRoleBadge = () => {
         if (!user) return null;
         const roleColors = {
@@ -12,17 +12,20 @@ const GlobalHeader = ({ user, onSettingsClick, onProfileClick }) => {
         };
         const config = roleColors[user.role] || roleColors['player'];
         return (
-            <span style={{
-                fontSize: '10px',
-                fontWeight: '800',
-                padding: '4px 8px',
-                borderRadius: '6px',
-                background: config.bg,
-                color: config.color,
-                letterSpacing: '1px',
-                border: `1px solid ${config.color}`,
-                marginRight: '10px'
-            }}>
+            <span
+                onClick={user.role === 'admin' ? onHomeClick : undefined}
+                style={{
+                    fontSize: '10px',
+                    fontWeight: '800',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    background: config.bg,
+                    color: config.color,
+                    letterSpacing: '1px',
+                    border: `1px solid ${config.color}`,
+                    marginRight: '10px',
+                    cursor: user.role === 'admin' ? 'pointer' : 'default'
+                }}>
                 {config.label}
             </span>
         );
@@ -30,8 +33,8 @@ const GlobalHeader = ({ user, onSettingsClick, onProfileClick }) => {
 
     return (
         <header className="fade-in" style={{ marginBottom: 'var(--spacing-xl)', paddingTop: 'var(--spacing-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-                <img src="/logo.png" alt="Copa Delta" style={{ height: '50px', objectFit: 'contain' }} />
+            <div onClick={onHomeClick} style={{ cursor: 'pointer' }}>
+                <img src="/logo.png" alt="Copa Delta" style={{ height: '90px', objectFit: 'contain', transition: 'transform 0.2s' }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {getRoleBadge()}

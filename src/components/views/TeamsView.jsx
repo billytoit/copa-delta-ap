@@ -10,6 +10,12 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
     const { teamId } = useParams();
     const selectedTeamId = teamId ? parseInt(teamId) : null;
 
+    React.useEffect(() => {
+        if (selectedTeamId) {
+            window.scrollTo(0, 0);
+        }
+    }, [selectedTeamId]);
+
     const playerResults = searchTerm ? teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamColor: t.color, teamName: t.name, type: 'player' }))).filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.nickname && p.nickname.toLowerCase().includes(searchTerm.toLowerCase()))

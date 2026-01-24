@@ -1,8 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Shield, Edit3, X, ChevronLeft } from 'lucide-react';
 import PlayerAvatar from '../shared/PlayerAvatar.jsx';
 import EditPlayerForm from './EditPlayerForm.jsx';
 import TeamManager from './TeamManager.jsx';
+import { getAllowedUsers } from '../../services/database';
+
+const UsersList = () => {
+    const [users, setUsers] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const load = async () => {
+            const data = await getAllowedUsers();
+            setUsers(data);
+            setLoading(false);
+        };
+        load();
+    }, []);
+
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredUsers = users.filter(u =>
+        (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (u.full_name && u.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    if (loading) return <div style={{ textAlign: 'center', padding: '20px', fontSize: '12px' }}>Cargando lista de acceso...</div>;
+
+    return (
+        <div>
+            <div style={{ marginBottom: '15px' }}>
+                <input
+                    type="text"
+                    placeholder="Buscar por correo o nombre..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--glass-border)',
+                        background: 'rgba(255,255,255,0.05)',
+                        color: 'white',
+                        outline: 'none',
+                        fontSize: '14px'
+                    }}
+                />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '400px', overflowY: 'auto' }}>
+                {filteredUsers.map(u => (
+                    <div key={u.email} style={{ padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{u.email}</div>
+                            <div style={{ fontSize: '11px', color: u.assigned_role === 'admin' ? '#eab308' : 'var(--text-secondary)' }}>
+                                {u.full_name} ({u.assigned_role})
+                            </div>
+                        </div>
+                    </div>
+                ))}
+                {filteredUsers.length === 0 && <div style={{ opacity: 0.5, textAlign: 'center', padding: '20px' }}>No se encontraron usuarios.</div>}
+            </div>
+        </div>
+    );
+};
 
 const AdminDashboard = ({ user, teams, officials = [], onUpdatePlayer, onSelectPlayer, onAddPlayer, onUpdateTeam }) => {
     const [tab, setTab] = useState('home');
@@ -104,14 +164,19 @@ const AdminDashboard = ({ user, teams, officials = [], onUpdatePlayer, onSelectP
                             </div>
                             <div className="glass-card" style={{ padding: '0', maxHeight: '500px', overflowY: 'auto' }}>
                                 {filteredPlayers.map(p => (
-                                    <div key={p.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '10px' }}>
+                                    <div
+                                        key={p.id}
+                                        onClick={() => onSelectPlayer(p.id)}
+                                        style={{ display: 'flex', alignItems: 'center', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '10px', cursor: 'pointer' }}
+                                    >
                                         <PlayerAvatar photo={p.photo_url} name={p.name} size={40} borderColor={p.teamColor} />
                                         <div style={{ flex: 1 }}>
                                             <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{p.nickname || p.name}</div>
                                             <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{p.teamName}</div>
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
-                                            <div onClick={() => setSelectedPlayerForEdit(p)} style={{ color: 'var(--primary)', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Editar</div>
+                                            {/* Changed: Now navigates to Profile Page instead of inline edit */}
+                                            <div style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: 'bold' }}>Ver / Editar</div>
                                         </div>
                                     </div>
                                 ))}
@@ -173,30 +238,12 @@ const AdminDashboard = ({ user, teams, officials = [], onUpdatePlayer, onSelectP
             {
                 tab === 'users' && (
                     <div className="glass-card">
-                        <h3 style={{ marginBottom: '15px', fontSize: '14px' }}>Usuarios y Permisos (Solo Lectura)</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <div style={{ padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <div style={{ fontWeight: 'bold', fontSize: '13px' }}>admin@delta.com</div>
-                                    <div style={{ fontSize: '11px', color: 'var(--primary)' }}>Administrador</div>
-                                </div>
-                                <div style={{ fontSize: '11px', color: '#22c55e' }}>Activo</div>
-                            </div>
-                            <div style={{ padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <div style={{ fontWeight: 'bold', fontSize: '13px' }}>operador@atletico.com</div>
-                                    <div style={{ fontSize: '11px', color: 'var(--secondary)' }}>Operador (Atlético)</div>
-                                </div>
-                                <div style={{ fontSize: '11px', color: '#22c55e' }}>Activo</div>
-                            </div>
-                            <div style={{ padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <div style={{ fontWeight: 'bold', fontSize: '13px' }}>veedor@delta.com</div>
-                                    <div style={{ fontSize: '11px', color: '#ec4899' }}>Veedor</div>
-                                </div>
-                                <div style={{ fontSize: '11px', color: '#22c55e' }}>Activo</div>
-                            </div>
-                        </div>
+                        <h3 style={{ marginBottom: '15px', fontSize: '14px' }}>Usuarios y Permisos (Lista de Acceso)</h3>
+                        <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '15px' }}>
+                            Esta lista controla quién puede ingresar al sistema. Se gestiona desde Supabase o scripts de carga masiva.
+                        </p>
+
+                        <UsersList />
                     </div>
                 )
             }
@@ -204,14 +251,18 @@ const AdminDashboard = ({ user, teams, officials = [], onUpdatePlayer, onSelectP
                 <div className="fade-in">
                     <div className="glass-card" style={{ padding: '0', maxHeight: '500px', overflowY: 'auto' }}>
                         {officials.length > 0 ? officials.map(o => (
-                            <div key={o.id} style={{ display: 'flex', alignItems: 'center', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '10px' }}>
+                            <div
+                                key={o.id}
+                                onClick={() => onSelectPlayer(o.id)}
+                                style={{ display: 'flex', alignItems: 'center', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '10px', cursor: 'pointer' }}
+                            >
                                 <PlayerAvatar photo={o.photo_url} name={o.name} size={40} borderColor="var(--primary)" />
                                 <div style={{ flex: 1 }}>
                                     <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{o.name}</div>
                                     <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Veedor / Árbitro</div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div onClick={() => onSelectPlayer(o.id)} style={{ color: 'var(--primary)', fontSize: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Ver Perfil</div>
+                                    <div style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: 'bold' }}>Ver Perfil</div>
                                 </div>
                             </div>
                         )) : (

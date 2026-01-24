@@ -22,10 +22,14 @@ const EditPlayerForm = ({ player, existingPlayers = [], onSave, onCancel, user }
 
         if (formData.number) {
             const newNumber = parseInt(formData.number);
-            const duplicate = (existingPlayers || []).find(p => p.number === newNumber && p.id !== player.id);
+            const duplicate = (existingPlayers || []).find(p =>
+                p.number === newNumber &&
+                p.id !== player.id &&
+                p.team_id === player.team_id // Check only in same team
+            );
 
             if (duplicate) {
-                setError(`El número ${newNumber} ya está en uso por ${duplicate.nickname || duplicate.name}`);
+                setError(`El número ${newNumber} ya está en uso en este equipo por ${duplicate.nickname || duplicate.name}`);
                 return;
             }
         }

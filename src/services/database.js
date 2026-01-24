@@ -304,3 +304,16 @@ export const closePoll = async (pollId) => {
 
     if (error) throw error;
 }
+
+export const getAllowedUsers = async () => {
+    const { data, error } = await supabase
+        .from('allowed_users')
+        .select('*')
+        .order('assigned_role', { ascending: true });
+
+    if (error) {
+        console.warn("Error fetching allowed users:", error);
+        return [];
+    }
+    return data;
+}
