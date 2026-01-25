@@ -65,11 +65,7 @@ const App = () => {
             // but currently we show Login component conditionally below.
         }
 
-        // Fix: User feedback "Always go to Home on entry".
-        // Specifically fixing the issue where users land on /settings after login/refresh.
-        if (user && !loading && location.pathname === '/settings') {
-            navigate('/', { replace: true });
-        }
+        // REMOVED unintentional redirect that blocked settings access
     }, [user, loading, location.pathname, navigate]);
 
     const handleLogout = async () => {

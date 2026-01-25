@@ -32,9 +32,29 @@ const SettingsView = ({ teams, onLogout }) => {
                 <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '15px' }}>
                     Consulta la normativa completa de la Copa Delta 2026.
                 </p>
-                <a href="/reglamento.pdf" download className="glass-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', textDecoration: 'none', color: 'white', background: 'var(--glass)', padding: '10px', border: '1px solid var(--primary)', fontWeight: '600', fontSize: '14px' }}>
-                    <Download size={16} />
-                    Descargar Reglamento
+                <a
+                    href="/reglamento.pdf"
+                    download
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '10px',
+                        textDecoration: 'none',
+                        color: 'white',
+                        background: 'linear-gradient(135deg, var(--primary) 0%, #034694 100%)',
+                        padding: '15px',
+                        borderRadius: 'var(--radius-md)',
+                        fontWeight: '700',
+                        fontSize: '14px',
+                        boxShadow: '0 4px 12px rgba(56, 189, 248, 0.2)',
+                        transition: 'transform 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                    <Download size={18} />
+                    Descargar Reglamento PDF
                 </a>
             </div>
 

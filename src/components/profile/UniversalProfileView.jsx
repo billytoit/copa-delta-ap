@@ -12,7 +12,7 @@ const UniversalProfileView = ({ profileId, onBack, user, teams, officials = [], 
 
     // Search in players
     for (const t of teams) {
-        const found = (t.players || []).find(p => p.id === profileId);
+        const found = (t.players || []).find(p => String(p.id) === String(profileId));
         if (found) {
             person = found;
             personTeam = t;
@@ -22,7 +22,7 @@ const UniversalProfileView = ({ profileId, onBack, user, teams, officials = [], 
 
     // Search in officials if not found
     if (!person) {
-        const foundOff = officials.find(o => o.id === profileId);
+        const foundOff = officials.find(o => String(o.id) === String(profileId));
         if (foundOff) {
             person = foundOff;
             isOfficial = true;

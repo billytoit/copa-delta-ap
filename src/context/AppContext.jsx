@@ -66,14 +66,25 @@ export const AppProvider = ({ children }) => {
                 .eq('profile_id', authUser.id)
                 .maybeSingle();
 
+            // 4. Fallback for Officials if no player record
+            let officialData = null;
+            if (!playerData) {
+                const { data } = await supabase
+                    .from('officials')
+                    .select('*')
+                    .eq('profile_id', authUser.id)
+                    .maybeSingle();
+                officialData = data;
+            }
+
             // Enrich user object
             setUser({
                 ...authUser, // Spread authUser FIRST
                 id: authUser.id,
                 email: authUser.email,
                 role: role, // Explicit role overrides authUser.role
-                name: profile.full_name || authUser.email.split('@')[0],
-                avatar: profile.avatar_url,
+                name: profile.full_name || playerData?.name || officialData?.name || authUser.email.split('@')[0],
+                avatar: profile.avatar_url || playerData?.photo_url || officialData?.photo_url,
                 // Merged Player Data
                 teamName: playerData?.team?.name,
                 teamId: playerData?.team_id,
@@ -81,6 +92,10 @@ export const AppProvider = ({ children }) => {
                 number: playerData?.number,
                 playerId: playerData?.id,
                 ...profile,
+                // Ensure bio/job/etc are available even if profile is empty but player has them?
+                // Actually players table might not have bio/job, usually it's in profile.
+                // But let's be safe.
+                stats: playerData?.stats,
             });
         } catch (err) {
             console.error("Error fetching user data:", err);
@@ -163,13 +178,44 @@ export const AppProvider = ({ children }) => {
                         else { stats.pp++; }
                     });
                     stats.dg = stats.gf - stats.gc;
-                    return { ...t, stats };
+
+                    // ENRIQUECER JUGADORES CON GOLES (Desde view_top_scorers)
+                    const enrichedPlayers = (t.players || []).map(p => {
+                        const scorerInfo = scorersData.find(s => s.id === p.id);
+                        return {
+                            ...p,
+                            stats: {
+                                ...p.stats,
+                                goals: scorerInfo ? scorerInfo.goals : 0
+                            }
+                        };
+                    });
+
+                    return { ...t, stats, players: enrichedPlayers };
                 });
 
                 setTeams(teamsWithStats);
                 setMatches(formattedMatches);
                 setTopScorers(scorersData);
                 setOfficials(officialsData);
+
+                // ACTUALIZAR ESTADÍSTICAS DEL USUARIO LOGUEADO
+                setUser(prev => {
+                    if (!prev) return null;
+                    // Encontrar al jugador en los equipos enriquecidos
+                    const allPlayers = teamsWithStats.flatMap(t => t.players || []);
+                    const foundPlayer = allPlayers.find(p => String(p.id) === String(prev.playerId || prev.id));
+
+                    if (foundPlayer) {
+                        return {
+                            ...prev,
+                            stats: foundPlayer.stats,
+                            // Si el avatar estaba vacío, usar la foto del jugador
+                            avatar: prev.avatar || foundPlayer.photo_url,
+                        };
+                    }
+                    return prev;
+                });
             }
         } catch (err) {
             console.error("Context Error:", err);

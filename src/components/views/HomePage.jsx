@@ -7,8 +7,17 @@ import GoleadoresWidget from './GoleadoresWidget.jsx';
 
 const HomePage = ({ user, onSelectPlayer, teams, officials = [], matches, topScorers = [], onUpdatePlayer, onAddPlayer, handleUpdateTeam, onSelectMatch }) => {
     // Find next match (first scheduled match)
-    // Assuming matches are roughly sorted or just taking the first 'scheduled' one.
-    const nextMatch = matches ? matches.find(m => (!m.status || m.status === 'scheduled')) : null;
+    // - For players: find next match for THEIR team.
+    // - For others (officials, admins): find the next absolute match.
+    const nextMatch = matches ? matches.find(m => {
+        const isScheduled = (!m.status || m.status === 'scheduled');
+        if (!isScheduled) return false;
+
+        if (user.role === 'player' && user.teamId) {
+            return m.team_a_id === user.teamId || m.team_b_id === user.teamId;
+        }
+        return true; // For officials/admins, just take the first scheduled one
+    }) : null;
 
     return (
         <div className="fade-in">
@@ -47,7 +56,7 @@ const HomePage = ({ user, onSelectPlayer, teams, officials = [], matches, topSco
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>
                                 <h2 style={{ fontSize: '14px', color: 'var(--primary)', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                                    {user.role === 'official' ? 'Tu Próximo Partido' : 'Próximo Partido'}
+                                    {(user.role === 'official' || user.role === 'player') ? 'Tu Próximo Partido' : 'Próximo Partido'}
                                 </h2>
                                 {user.role === 'official' && <Edit3 size={14} color="var(--primary)" />}
                             </div>

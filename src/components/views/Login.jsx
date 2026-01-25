@@ -58,7 +58,7 @@ const Login = () => {
     return (
         <div className="fade-in" style={{ padding: '20px', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                <img src="/logo.png" alt="Copa Delta" style={{ height: '100px', objectFit: 'contain', marginBottom: '10px' }} />
+                <img src="/logo.png?v=3" alt="Copa Delta" style={{ height: '100px', objectFit: 'contain', marginBottom: '10px' }} />
                 <h2 style={{ fontSize: '24px', fontWeight: 'bold' }}>Bienvenido</h2>
                 <p style={{ opacity: 0.7 }}>Inicia sesión para continuar</p>
             </div>
@@ -149,11 +149,35 @@ const Login = () => {
                         type="submit"
                         disabled={loading}
                         style={{
-                            padding: '12px', background: 'var(--primary-color)', color: 'white',
-                            border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold',
+                            padding: '14px',
+                            background: 'linear-gradient(135deg, var(--primary) 0%, #0ea5e9 100%)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '12px',
+                            fontSize: '16px',
+                            fontWeight: '700',
                             cursor: loading ? 'not-allowed' : 'pointer',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-                            marginTop: '10px'
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            marginTop: '10px',
+                            boxShadow: '0 4px 15px rgba(56, 189, 248, 0.4)',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase'
+                        }}
+                        onMouseEnter={(e) => {
+                            if (!loading) {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 6px 20px rgba(56, 189, 248, 0.6)';
+                            }
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!loading) {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 4px 15px rgba(56, 189, 248, 0.4)';
+                            }
                         }}
                     >
                         {loading ? <Loader className="spin" size={20} /> : (isSignUp ? "Registrarse" : "Ingresar")}
