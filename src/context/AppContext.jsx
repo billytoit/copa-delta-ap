@@ -196,7 +196,8 @@ export const AppProvider = ({ children }) => {
                         };
                     });
 
-                    // Convert staff members to "player-like" objects for unified list
+                    // Convert staff members to "player-like" objects for unified list display in Team View
+                    // We include all profile fields so they are available in UniversalProfileView
                     const staffAsPlayers = teamStaffMembers.map(s => ({
                         id: s.id,
                         profile_id: s.profile_id,
@@ -210,8 +211,8 @@ export const AppProvider = ({ children }) => {
                         email: s.email,
                         isStaff: true,
                         type: 'staff',
-                        number: 'DIR', // Indicator for staff
-                        team: t
+                        number: 'DIR', // Visual indicator in team list
+                        team: t // Reference back to the team object
                     }));
 
                     const allMembers = [...staffAsPlayers, ...enrichedPlayers];

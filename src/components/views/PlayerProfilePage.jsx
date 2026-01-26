@@ -27,9 +27,11 @@ const PlayerProfilePage = () => {
 
     const handleUpdatePlayer = async (updatedPlayer) => {
         try {
+            // pid is the unique id for the record (UUID for players, BIGINT for staff)
             const pid = updatedPlayer.id;
 
-            // Common profile fields (now enabled via SQL)
+            // Define fields that are common or present in profiles/players/staff
+            // These match the columns we added via SQL
             const profileFields = {
                 name: updatedPlayer.name,
                 photo_url: updatedPlayer.photo_url,
@@ -47,17 +49,16 @@ const PlayerProfilePage = () => {
             const isStaffNode = (teamStaff || []).some(s => String(s.id) === String(pid)) ||
                 updatedPlayer.type === 'staff';
 
+            // Variable to store Supabase response outside and avoid ReferenceErrors
             let updateResult = { data: null, error: null, count: null };
 
             if (isOfficialNode) {
-                console.log("Updating official:", pid, profileFields);
                 updateResult = await supabase.from('officials').update({
                     name: profileFields.name,
                     photo_url: profileFields.photo_url
                 }).eq('id', pid).select();
                 if (updateResult.error) throw updateResult.error;
             } else if (isStaffNode) {
-                console.log("Updating staff:", pid, profileFields);
                 const staffUpdates = {
                     ...profileFields,
                     phone: updatedPlayer.phone
@@ -66,10 +67,8 @@ const PlayerProfilePage = () => {
                     .update(staffUpdates)
                     .eq('id', pid)
                     .select();
-                console.log("Update response:", updateResult);
                 if (updateResult.error) throw updateResult.error;
             } else {
-                console.log("Updating player:", pid, profileFields);
                 const playerUpdates = {
                     ...profileFields,
                     number: updatedPlayer.number,
@@ -79,19 +78,13 @@ const PlayerProfilePage = () => {
                     .update(playerUpdates)
                     .eq('id', pid)
                     .select();
-                console.log("Update response:", updateResult);
                 if (updateResult.error) throw updateResult.error;
             }
 
             const { data, count } = updateResult;
 
             setIsEditing(false);
-            const rowsAffected = data ? data.length : 0;
-            if (rowsAffected === 0) {
-                alert("Actualizado: 0 filas afectadas. Verifica permisos o ID.");
-            } else {
-                alert(`Perfil actualizado correctamente (${rowsAffected} fila/s)`);
-            }
+            alert("Perfil actualizado correctamente");
 
             await refreshData(true);
             return true;
