@@ -181,11 +181,14 @@ export const AppProvider = ({ children }) => {
                     });
                     stats.dg = stats.gf - stats.gc;
 
-                    // ENRIQUECER JUGADORES CON GOLES (Desde view_top_scorers)
+                    // ENRIQUECER JUGADORES CON GOLES Y AGREGAR DIRIGENTES
+                    const teamStaffMembers = (staffData || []).filter(s => s.team_id === t.id);
+
                     const enrichedPlayers = (t.players || []).map(p => {
                         const scorerInfo = scorersData.find(s => s.id === p.id);
                         return {
                             ...p,
+                            type: 'player',
                             stats: {
                                 ...p.stats,
                                 goals: scorerInfo ? scorerInfo.goals : 0
@@ -193,7 +196,22 @@ export const AppProvider = ({ children }) => {
                         };
                     });
 
-                    return { ...t, stats, players: enrichedPlayers };
+                    // Convert staff members to "player-like" objects for unified list
+                    const staffAsPlayers = teamStaffMembers.map(s => ({
+                        id: s.id,
+                        profile_id: s.profile_id,
+                        name: s.name,
+                        nickname: s.nickname,
+                        photo_url: s.photo_url,
+                        job: s.job,
+                        isStaff: true,
+                        type: 'staff',
+                        number: 'DIR' // Indicator for staff
+                    }));
+
+                    const allMembers = [...staffAsPlayers, ...enrichedPlayers];
+
+                    return { ...t, stats, players: allMembers };
                 });
 
                 setTeams(teamsWithStats);

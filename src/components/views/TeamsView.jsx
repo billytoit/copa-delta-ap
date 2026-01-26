@@ -16,7 +16,7 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
         }
     }, [selectedTeamId]);
 
-    const playerResults = searchTerm ? teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamColor: t.color, teamName: t.name, type: 'player' }))).filter(p =>
+    const playerResults = searchTerm ? teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamColor: t.color, teamName: t.name }))).filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.nickname && p.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
     ) : [];
@@ -229,28 +229,44 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
 
                     <h3 style={{ fontSize: '16px', marginBottom: '15px', paddingLeft: '5px' }}>Lista de Jugadores {(selectedTeam.players || []).length}</h3>
                     <div className="glass-card" style={{ padding: '0' }}>
-                        {(selectedTeam.players || []).map((p, idx) => (
-                            <div
-                                key={p.id}
-                                onClick={() => onSelectPlayer(p.id)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '12px 15px',
-                                    borderBottom: idx < selectedTeam.players.length - 1 ? '1px solid var(--glass-border)' : 'none',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <PlayerAvatar photo={p.photo_url} name={p.name} size={35} borderColor={selectedTeam.color} />
-                                <div style={{ marginLeft: '12px', flex: 1 }}>
-                                    <div style={{ fontWeight: '800', fontSize: '14px' }}>
-                                        {p.nickname ? `${p.nickname} (${p.name})` : p.name}
+                        {(selectedTeam.players || [])
+                            .sort((a, b) => {
+                                if (a.isStaff && !b.isStaff) return -1;
+                                if (!a.isStaff && b.isStaff) return 1;
+                                return 0;
+                            })
+                            .map((p, idx, arr) => (
+                                <div
+                                    key={p.id}
+                                    onClick={() => onSelectPlayer(p.id)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        padding: '12px 15px',
+                                        borderBottom: idx < arr.length - 1 ? '1px solid var(--glass-border)' : 'none',
+                                        cursor: 'pointer',
+                                        background: p.isStaff ? 'rgba(255,255,255,0.03)' : 'transparent'
+                                    }}
+                                >
+                                    <PlayerAvatar photo={p.photo_url} name={p.name} size={35} borderColor={selectedTeam.color} />
+                                    <div style={{ marginLeft: '12px', flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ fontWeight: '800', fontSize: '14px' }}>
+                                                {p.nickname ? `${p.nickname} (${p.name})` : p.name}
+                                            </div>
+                                            {p.isStaff && (
+                                                <span style={{ fontSize: '8px', background: 'var(--primary)', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>DIRIGENTE</span>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
+                                            {p.isStaff ? (p.job || 'Dirigente') : `#${p.number}`}
+                                        </div>
                                     </div>
-                                    <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>#{p.number}</div>
+                                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>
+                                        {p.isStaff ? 'STAFF' : `#${p.number}`}
+                                    </span>
                                 </div>
-                                <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>#{p.number}</span>
-                            </div>
-                        ))}
+                            ))}
                     </div>
                 </div>
             )}

@@ -110,7 +110,8 @@ const PlayerAvatar = ({ photo, name, size = 60, borderSize = 2, borderColor = 'v
         );
     }
 
-    const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const nameStr = String(name || 'Jugador');
+    const initials = nameStr.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
     return (
         <div style={{
             width: `${size}px`,

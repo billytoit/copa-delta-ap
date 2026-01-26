@@ -102,18 +102,38 @@ const TeamManager = ({ user, teamId, onSelectPlayer, teams, onAddPlayer, onUpdat
                     </button>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {team.players.map(p => (
-                        <div key={p.id} onClick={() => onSelectPlayer(p.id)} className="glass-card" style={{ display: 'flex', alignItems: 'center', padding: '10px', background: 'rgba(255,255,255,0.02)', cursor: 'pointer' }}>
-                            <PlayerAvatar photo={p.photo_url} name={p.name} size={40} borderColor={team.color} />
-                            <div style={{ marginLeft: '12px', flex: 1 }}>
-                                <div style={{ fontWeight: '800', fontSize: '14px' }}>
-                                    {p.nickname ? `${p.nickname} (${p.name})` : p.name}
+                    {(team.players || [])
+                        .sort((a, b) => {
+                            if (a.isStaff && !b.isStaff) return -1;
+                            if (!a.isStaff && b.isStaff) return 1;
+                            return 0;
+                        })
+                        .map(p => (
+                            <div key={p.id} onClick={() => onSelectPlayer(p.id)} className="glass-card" style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                padding: '10px',
+                                background: p.isStaff ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
+                                cursor: 'pointer',
+                                border: p.isStaff ? '1px solid rgba(255,255,255,0.1)' : 'none'
+                            }}>
+                                <PlayerAvatar photo={p.photo_url} name={p.name} size={40} borderColor={team.color} />
+                                <div style={{ marginLeft: '12px', flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <div style={{ fontWeight: '800', fontSize: '14px' }}>
+                                            {p.nickname ? `${p.nickname} (${p.name})` : p.name}
+                                        </div>
+                                        {p.isStaff && (
+                                            <span style={{ fontSize: '8px', background: 'var(--primary)', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold' }}>DIRIGENTE</span>
+                                        )}
+                                    </div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                                        {p.isStaff ? (p.job || 'Dirigente') : `#${p.number}`}
+                                    </div>
                                 </div>
-                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>#{p.number}</div>
+                                {!p.isStaff && <Edit3 size={16} color="var(--primary)" />}
                             </div>
-                            <Edit3 size={16} color="var(--primary)" />
-                        </div>
-                    ))}
+                        ))}
                 </div>
             </div>
         </div>

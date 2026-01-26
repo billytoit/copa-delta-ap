@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
 import { Shield, Mail, Lock, Loader, AlertCircle } from 'lucide-react';
 
 const Login = () => {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -29,7 +31,7 @@ const Login = () => {
             });
 
             if (error) throw error;
-            // AppContext will handle the auth state change
+            navigate('/'); // Redirect to home after login success
         } catch (err) {
             setError(err.message === "Invalid login credentials" ? "Credenciales inválidas." : err.message);
         } finally {
