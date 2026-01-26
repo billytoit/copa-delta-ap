@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { getActiveSeason, getTeams, getMatches, getTopScorers, getOfficials, getPolls } from '../services/database';
+import { getActiveSeason, getTeams, getMatches, getTopScorers, getOfficials, getTeamStaff, getPolls } from '../services/database';
 
 const AppContext = createContext();
 

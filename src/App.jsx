@@ -34,7 +34,7 @@ import { supabase } from './lib/supabaseClient.js';
 // const IS_DEMO_MODE = true; // DEPRECATED: Using Real Auth
 
 const App = () => {
-    const { user, login, logout, teams, matches, topScorers, officials, loading, error, refreshData } = useApp();
+    const { user, login, logout, teams, matches, topScorers, officials, teamStaff, loading, error, refreshData } = useApp();
     const navigate = useNavigate();
     const location = useLocation();
 
