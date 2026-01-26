@@ -159,6 +159,14 @@ export const getOfficials = async () => {
     return data;
 }
 
+export const getTeamStaff = async () => {
+    const { data, error } = await supabase
+        .from('team_staff')
+        .select('*, team:teams(name, color)');
+    if (error) throw error;
+    return data;
+}
+
 export const updatePlayer = async (id, updates) => {
     const { data, error } = await supabase
         .from('players')

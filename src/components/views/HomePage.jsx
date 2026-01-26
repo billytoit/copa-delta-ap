@@ -5,7 +5,7 @@ import TeamManager from '../admin/TeamManager.jsx';
 import SocialBanner from '../shared/SocialBanner.jsx';
 import GoleadoresWidget from './GoleadoresWidget.jsx';
 
-const HomePage = ({ user, onSelectPlayer, teams, officials = [], matches, topScorers = [], onUpdatePlayer, onAddPlayer, handleUpdateTeam, onSelectMatch }) => {
+const HomePage = ({ user, onSelectPlayer, teams, officials = [], teamStaff = [], matches, topScorers = [], onUpdatePlayer, onAddPlayer, handleUpdateTeam, onSelectMatch }) => {
     // Find next match (first scheduled match)
     // - For players: find next match for THEIR team.
     // - For others (officials, admins): find the next absolute match.
@@ -24,7 +24,16 @@ const HomePage = ({ user, onSelectPlayer, teams, officials = [], matches, topSco
             {/* Header moved to App level */}
 
             {user.role === 'admin' ? (
-                <AdminDashboard user={user} teams={teams} officials={officials} onUpdatePlayer={onUpdatePlayer} onSelectPlayer={onSelectPlayer} onAddPlayer={onAddPlayer} onUpdateTeam={handleUpdateTeam} />
+                <AdminDashboard
+                    user={user}
+                    teams={teams}
+                    officials={officials}
+                    teamStaff={teamStaff}
+                    onUpdatePlayer={onUpdatePlayer}
+                    onSelectPlayer={onSelectPlayer}
+                    onAddPlayer={onAddPlayer}
+                    onUpdateTeam={handleUpdateTeam}
+                />
             ) : user.role === 'operador' ? (
                 <TeamManager user={user} teamId={user.teamId} onSelectPlayer={onSelectPlayer} teams={teams} onAddPlayer={onAddPlayer} onUpdateTeam={handleUpdateTeam} />
             ) : (

@@ -11,6 +11,7 @@ export const AppProvider = ({ children }) => {
     const [matches, setMatches] = useState([]);
     const [topScorers, setTopScorers] = useState([]);
     const [officials, setOfficials] = useState([]);
+    const [teamStaff, setTeamStaff] = useState([]);
     const [loading, setLoading] = useState(true);
     const [authLoading, setAuthLoading] = useState(true); // Separate Auth Loading
     const [error, setError] = useState(null);
@@ -131,11 +132,12 @@ export const AppProvider = ({ children }) => {
             setSeason(activeSeason);
 
             if (activeSeason) {
-                const [teamsData, matchesData, scorersData, officialsData] = await Promise.all([
+                const [teamsData, matchesData, scorersData, officialsData, staffData] = await Promise.all([
                     getTeams(),
                     getMatches(activeSeason.id),
                     getTopScorers(activeSeason.id),
-                    getOfficials()
+                    getOfficials(),
+                    getTeamStaff()
                 ]);
 
                 // Process matches (calculate stats, etc.)
@@ -198,6 +200,7 @@ export const AppProvider = ({ children }) => {
                 setMatches(formattedMatches);
                 setTopScorers(scorersData);
                 setOfficials(officialsData);
+                setTeamStaff(staffData);
 
                 // ACTUALIZAR ESTADÍSTICAS DEL USUARIO LOGUEADO
                 setUser(prev => {
@@ -232,7 +235,9 @@ export const AppProvider = ({ children }) => {
     return (
         <AppContext.Provider value={{
             user, login, logout,
-            season, teams, matches, topScorers, officials,
+            season, teams, matches, topScorers,
+            officials,
+            teamStaff,
             loading: loading || authLoading, // Combined loading state
             error, refreshData
         }}>

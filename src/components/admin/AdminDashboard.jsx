@@ -64,7 +64,7 @@ const UsersList = () => {
     );
 };
 
-const AdminDashboard = ({ user, teams, officials = [], onUpdatePlayer, onSelectPlayer, onAddPlayer, onUpdateTeam }) => {
+const AdminDashboard = ({ user, teams, officials = [], teamStaff = [], onUpdatePlayer, onSelectPlayer, onAddPlayer, onUpdateTeam }) => {
     const [tab, setTab] = useState('home');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedPlayerForEdit, setSelectedPlayerForEdit] = useState(null);
@@ -92,7 +92,7 @@ const AdminDashboard = ({ user, teams, officials = [], onUpdatePlayer, onSelectP
             <h1 className="title-gradient" style={{ marginBottom: '20px' }}>Panel de Control</h1>
 
             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '5px' }}>
-                {['home', 'players', 'teams', 'officials', 'users'].map(t => (
+                {['home', 'players', 'teams', 'officials', 'staff', 'users'].map(t => (
                     <button
                         key={t}
                         onClick={() => { setTab(t); setViewTeamId(null); }}
@@ -108,7 +108,7 @@ const AdminDashboard = ({ user, teams, officials = [], onUpdatePlayer, onSelectP
                             whiteSpace: 'nowrap'
                         }}
                     >
-                        {t === 'home' ? 'Inicio' : t === 'players' ? 'Jugadores' : t === 'teams' ? 'Equipos' : t === 'officials' ? 'Oficiales' : 'Usuarios'}
+                        {t === 'home' ? 'Inicio' : t === 'players' ? 'Jugadores' : t === 'teams' ? 'Equipos' : t === 'officials' ? 'Veedores' : t === 'staff' ? 'Dirigentes' : 'Usuarios'}
                     </button>
                 ))}
             </div>
@@ -255,6 +255,30 @@ const AdminDashboard = ({ user, teams, officials = [], onUpdatePlayer, onSelectP
                     </div>
                 )
             }
+            {tab === 'staff' && (
+                <div className="fade-in">
+                    <div className="glass-card" style={{ padding: '0', maxHeight: '500px', overflowY: 'auto' }}>
+                        {teamStaff.length > 0 ? teamStaff.map(s => (
+                            <div
+                                key={s.id}
+                                onClick={() => onSelectPlayer(s.profile_id || s.id)}
+                                style={{ display: 'flex', alignItems: 'center', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '10px', cursor: 'pointer' }}
+                            >
+                                <PlayerAvatar photo={s.photo_url} name={s.name} size={40} borderColor={s.team?.color || 'var(--primary)'} />
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{s.name}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Dirigente de {s.team?.name || 'equipo'}</div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: 'bold' }}>Ver Perfil</div>
+                                </div>
+                            </div>
+                        )) : (
+                            <div style={{ padding: '20px', textAlign: 'center', opacity: 0.5 }}>No hay dirigentes registrados.</div>
+                        )}
+                    </div>
+                </div>
+            )}
             {tab === 'officials' && (
                 <div className="fade-in">
                     <div className="glass-card" style={{ padding: '0', maxHeight: '500px', overflowY: 'auto' }}>

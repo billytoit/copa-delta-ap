@@ -2,11 +2,12 @@ import React from 'react';
 import { ChevronLeft, ShieldCheck, Edit3, Lock, Shield, MessageCircle, Users, Instagram, Mail, Phone, AlertCircle } from 'lucide-react';
 import PlayerAvatar from '../shared/PlayerAvatar.jsx';
 
-const UniversalProfileView = ({ profileId, onBack, user, teams, officials = [], onEdit }) => {
-    // 1. Find the person (player or official)
+const UniversalProfileView = ({ profileId, onBack, user, teams, officials = [], teamStaff = [], onEdit }) => {
+    // 1. Find the person (player, official or team staff)
     let person = null;
     let personTeam = null;
     let isOfficial = false;
+    let isTeamStaff = false;
 
     if (!teams) return null;
 
@@ -22,10 +23,20 @@ const UniversalProfileView = ({ profileId, onBack, user, teams, officials = [], 
 
     // Search in officials if not found
     if (!person) {
-        const foundOff = officials.find(o => String(o.id) === String(profileId));
+        const foundOff = (officials || []).find(o => String(o.id) === String(profileId));
         if (foundOff) {
             person = foundOff;
             isOfficial = true;
+        }
+    }
+
+    // Search in team staff if not found
+    if (!person) {
+        const foundStaff = (teamStaff || []).find(s => String(s.profile_id || s.id) === String(profileId));
+        if (foundStaff) {
+            person = foundStaff;
+            personTeam = foundStaff.team;
+            isTeamStaff = true;
         }
     }
 
@@ -130,7 +141,7 @@ const UniversalProfileView = ({ profileId, onBack, user, teams, officials = [], 
                 {/* Role Badge */}
                 <div style={{ display: 'inline-block', background: 'rgba(255,255,255,0.1)', borderRadius: '20px', padding: '8px 16px', marginBottom: '20px' }}>
                     <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        {isOfficial ? 'OFICIAL DEL TORNEO' : 'JUGADOR OFICIAL'}
+                        {isOfficial ? 'OFICIAL DEL TORNEO' : isTeamStaff ? 'DIRIGENTE DE EQUIPO' : 'JUGADOR OFICIAL'}
                     </span>
                 </div>
 

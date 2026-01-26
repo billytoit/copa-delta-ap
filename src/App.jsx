@@ -174,7 +174,7 @@ const App = () => {
             <ReloadPrompt />
 
             <Routes>
-                <Route path="/" element={<HomePage user={user} onSelectPlayer={onSelectPlayerShim} teams={teams} officials={officials} matches={matches} topScorers={topScorers} onUpdatePlayer={onUpdatePlayerShim} onAddPlayer={handleAddPlayer} onSelectMatch={onSelectMatchShim} />} />
+                <Route path="/" element={<HomePage user={user} onSelectPlayer={onSelectPlayerShim} teams={teams} officials={officials} teamStaff={teamStaff} matches={matches} topScorers={topScorers} onUpdatePlayer={onUpdatePlayerShim} onAddPlayer={handleAddPlayer} onSelectMatch={onSelectMatchShim} />} />
                 <Route path="/home" element={<Navigate to="/" replace />} />
                 <Route path="/matches" element={<MatchesView matches={matches} user={user} onSelectMatch={onSelectMatchShim} teams={teams} />} />
                 <Route path="/match/:id" element={<MatchDetailsPage />} />
@@ -189,6 +189,7 @@ const App = () => {
                 <Route path="/voting" element={<VotingView user={user} polls={polls} userParticipations={userParticipations} onVote={handleVote} onCreatePoll={createPoll} onClosePoll={closePoll} />} />
                 <Route path="/settings" element={<SettingsView teams={teams} onLogout={() => setShowLogoutModal(true)} />} />
                 <Route path="/profile" element={<UserProfileView user={user} onUpdateUser={onUpdatePlayerShim} onLogout={() => setShowLogoutModal(true)} />} />
+                <Route path="/player/:id" element={<UniversalProfileView profileId={location.pathname.split('/').pop()} onBack={() => navigate(-1)} user={user} teams={teams} officials={officials} teamStaff={teamStaff} onEdit={(id) => onSelectPlayerShim(id)} />} />
             </Routes>
 
             {showLogoutModal && (
