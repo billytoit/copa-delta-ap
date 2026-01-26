@@ -126,7 +126,7 @@ const Login = () => {
                         </div>
                     </div>
 
-                    <div>
+                    <div style={{ position: 'relative' }}>
                         <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', opacity: 0.8 }}>Contraseña</label>
                         <div style={{ position: 'relative' }}>
                             <Lock size={18} style={{ position: 'absolute', left: '12px', top: '12px', opacity: 0.5 }} />
@@ -140,9 +140,30 @@ const Login = () => {
                                     borderRadius: '8px', border: '1px solid var(--glass-border)',
                                     background: 'rgba(255,255,255,0.05)', color: 'white', outline: 'none'
                                 }}
-                                required
+                                required={!loading}
                             />
                         </div>
+                        {!isSignUp && (
+                            <button
+                                type="button"
+                                onClick={async () => {
+                                    if (!email) return setError("Ingresa tu correo primero para resetear la contraseña.");
+                                    setLoading(true);
+                                    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                                        redirectTo: window.location.origin + '/reset-password',
+                                    });
+                                    setLoading(false);
+                                    if (error) setError(error.message);
+                                    else alert("Se ha enviado un correo para restablecer tu contraseña. Revisa tu bandeja de entrada.");
+                                }}
+                                style={{
+                                    float: 'right', marginTop: '5px', background: 'none', border: 'none',
+                                    color: 'var(--primary)', fontSize: '12px', cursor: 'pointer', opacity: 0.8
+                                }}
+                            >
+                                Olvidé mi contraseña
+                            </button>
+                        )}
                     </div>
 
                     <button
