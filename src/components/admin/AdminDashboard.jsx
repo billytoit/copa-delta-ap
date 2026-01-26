@@ -70,13 +70,21 @@ const AdminDashboard = ({ user, teams, officials = [], onUpdatePlayer, onSelectP
     const [selectedPlayerForEdit, setSelectedPlayerForEdit] = useState(null);
     const [viewTeamId, setViewTeamId] = useState(null);
 
-    const allPlayers = teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamName: t.name, teamColor: t.color, teamId: t.id })));
+    const allPlayers = (teams || []).flatMap(t => (t.players || []).map(p => ({
+        ...p,
+        name: p.name || 'Sin nombre',
+        teamName: t.name,
+        teamColor: t.color,
+        teamId: t.id
+    })));
     const totalPlayers = allPlayers.length;
 
     const filteredPlayers = allPlayers.filter(p => {
-        const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (p.nickname && p.nickname.toLowerCase().includes(searchTerm.toLowerCase()));
-        return matchesSearch;
+        const nameText = (p.name || '').toLowerCase();
+        const nickText = (p.nickname || '').toLowerCase();
+        const search = (searchTerm || '').toLowerCase();
+
+        return nameText.includes(search) || nickText.includes(search);
     });
 
     return (
