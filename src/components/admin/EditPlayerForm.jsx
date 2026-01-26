@@ -12,7 +12,10 @@ const EditPlayerForm = ({ player, existingPlayers = [], onSave, onCancel, user }
         nickname: player.nickname || '',
         number: player.number || '',
         phone: player.phone || '',
-        photo_url: player.photo_url
+        photo_url: player.photo_url,
+        bio: player.bio || '',
+        job: player.job || '',
+        instagram: player.instagram || ''
     });
     const [error, setError] = useState('');
     const [isSaving, setIsSaving] = useState(false);
@@ -134,6 +137,38 @@ const EditPlayerForm = ({ player, existingPlayers = [], onSave, onCancel, user }
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         disabled={isLocked}
                         placeholder="Ej: +593 ..."
+                        style={{ width: '100%', padding: '10px', background: isLocked ? 'rgba(255,255,255,0.02)' : 'var(--glass)', border: '1px solid var(--glass-border)', color: isLocked ? 'var(--text-secondary)' : 'white', borderRadius: '8px', cursor: isLocked ? 'not-allowed' : 'text' }}
+                    />
+                </div>
+                <div>
+                    <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '5px' }}>Bio (Descripción corta)</label>
+                    <textarea
+                        value={formData.bio}
+                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                        disabled={isLocked}
+                        placeholder="Define quién eres..."
+                        style={{ width: '100%', padding: '10px', background: isLocked ? 'rgba(255,255,255,0.02)' : 'var(--glass)', border: '1px solid var(--glass-border)', color: isLocked ? 'var(--text-secondary)' : 'white', borderRadius: '8px', cursor: isLocked ? 'not-allowed' : 'text', minHeight: '80px', fontFamily: 'inherit' }}
+                    />
+                </div>
+                <div>
+                    <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '5px' }}>Ocupación / Trabajo</label>
+                    <input
+                        type="text"
+                        value={formData.job}
+                        onChange={(e) => setFormData({ ...formData, job: e.target.value })}
+                        disabled={isLocked}
+                        placeholder="Ej: Ingeniero, Estudiante..."
+                        style={{ width: '100%', padding: '10px', background: isLocked ? 'rgba(255,255,255,0.02)' : 'var(--glass)', border: '1px solid var(--glass-border)', color: isLocked ? 'var(--text-secondary)' : 'white', borderRadius: '8px', cursor: isLocked ? 'not-allowed' : 'text' }}
+                    />
+                </div>
+                <div>
+                    <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '5px' }}>Instagram (Usuario)</label>
+                    <input
+                        type="text"
+                        value={formData.instagram}
+                        onChange={(e) => setFormData({ ...formData, instagram: e.target.value })}
+                        disabled={isLocked}
+                        placeholder="Ej: @usuario"
                         style={{ width: '100%', padding: '10px', background: isLocked ? 'rgba(255,255,255,0.02)' : 'var(--glass)', border: '1px solid var(--glass-border)', color: isLocked ? 'var(--text-secondary)' : 'white', borderRadius: '8px', cursor: isLocked ? 'not-allowed' : 'text' }}
                     />
                 </div>

@@ -203,10 +203,15 @@ export const AppProvider = ({ children }) => {
                         name: s.name,
                         nickname: s.nickname,
                         photo_url: s.photo_url,
+                        bio: s.bio,
                         job: s.job,
+                        instagram: s.instagram,
+                        phone: s.phone,
+                        email: s.email,
                         isStaff: true,
                         type: 'staff',
-                        number: 'DIR' // Indicator for staff
+                        number: 'DIR', // Indicator for staff
+                        team: t
                     }));
 
                     const allMembers = [...staffAsPlayers, ...enrichedPlayers];

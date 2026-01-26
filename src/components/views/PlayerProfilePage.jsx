@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabaseClient.js';
 const PlayerProfilePage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { user, teams, officials, refreshData } = useApp();
+    const { user, teams, officials, teamStaff, refreshData } = useApp();
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -27,25 +27,71 @@ const PlayerProfilePage = () => {
 
     const handleUpdatePlayer = async (updatedPlayer) => {
         try {
-            const { teamId, team_id, id: pid, teamName, teamColor, persisted, role, stats, category, ...updates } = updatedPlayer;
-            const isOfficialNode = (officials || []).some(o => o.id === pid) ||
-                role === 'official' || role === 'veedor' || role === 'arbitro' || category === 'official';
+            const pid = updatedPlayer.id;
+
+            // Common profile fields (now enabled via SQL)
+            const profileFields = {
+                name: updatedPlayer.name,
+                photo_url: updatedPlayer.photo_url,
+                nickname: updatedPlayer.nickname,
+                bio: updatedPlayer.bio,
+                job: updatedPlayer.job,
+                instagram: updatedPlayer.instagram,
+                email: updatedPlayer.email
+            };
+
+            const isOfficialNode = (officials || []).some(o => String(o.id) === String(pid)) ||
+                updatedPlayer.role === 'official' ||
+                updatedPlayer.category === 'official';
+
+            const isStaffNode = (teamStaff || []).some(s => String(s.id) === String(pid)) ||
+                updatedPlayer.type === 'staff';
+
+            let updateResult = { data: null, error: null, count: null };
 
             if (isOfficialNode) {
-                const officialUpdates = { ...updates };
-                // cleanup fields
-                delete officialUpdates.number;
-                delete officialUpdates.nickname;
-                delete officialUpdates.phone;
-                const { error } = await supabase.from('officials').update(officialUpdates).eq('id', pid);
-                if (error) throw error;
+                console.log("Updating official:", pid, profileFields);
+                updateResult = await supabase.from('officials').update({
+                    name: profileFields.name,
+                    photo_url: profileFields.photo_url
+                }).eq('id', pid).select();
+                if (updateResult.error) throw updateResult.error;
+            } else if (isStaffNode) {
+                console.log("Updating staff:", pid, profileFields);
+                const staffUpdates = {
+                    ...profileFields,
+                    phone: updatedPlayer.phone
+                };
+                updateResult = await supabase.from('team_staff')
+                    .update(staffUpdates)
+                    .eq('id', pid)
+                    .select();
+                console.log("Update response:", updateResult);
+                if (updateResult.error) throw updateResult.error;
             } else {
-                const { error } = await supabase.from('players').update(updates).eq('id', pid);
-                if (error) throw error;
+                console.log("Updating player:", pid, profileFields);
+                const playerUpdates = {
+                    ...profileFields,
+                    number: updatedPlayer.number,
+                    phone: updatedPlayer.phone
+                };
+                updateResult = await supabase.from('players')
+                    .update(playerUpdates)
+                    .eq('id', pid)
+                    .select();
+                console.log("Update response:", updateResult);
+                if (updateResult.error) throw updateResult.error;
             }
 
+            const { data, count } = updateResult;
+
             setIsEditing(false);
-            alert("Perfil actualizado correctamente");
+            const rowsAffected = data ? data.length : 0;
+            if (rowsAffected === 0) {
+                alert("Actualizado: 0 filas afectadas. Verifica permisos o ID.");
+            } else {
+                alert(`Perfil actualizado correctamente (${rowsAffected} fila/s)`);
+            }
 
             await refreshData(true);
             return true;
@@ -63,6 +109,7 @@ const PlayerProfilePage = () => {
             if (found) { playerToEdit = found; break; }
         }
         if (!playerToEdit) playerToEdit = officials.find(o => o.id.toString() === id || o.id === id);
+        if (!playerToEdit) playerToEdit = teamStaff.find(s => s.id.toString() === id || s.id === id);
     }
 
     if (isEditing && playerToEdit) {
@@ -73,8 +120,14 @@ const PlayerProfilePage = () => {
                 user={user}
                 onCancel={() => setIsEditing(false)}
                 onSave={(data) => {
-                    const isOff = officials.some(o => o.id === playerToEdit.id);
-                    return handleUpdatePlayer({ ...playerToEdit, ...data, category: isOff ? 'official' : undefined });
+                    const isOff = officials.find(o => String(o.id) === String(playerToEdit.id));
+                    const isSta = teamStaff.find(s => String(s.id) === String(playerToEdit.id));
+                    return handleUpdatePlayer({
+                        ...playerToEdit,
+                        ...data,
+                        category: isOff ? 'official' : undefined,
+                        type: isSta ? 'staff' : playerToEdit.type
+                    });
                 }}
             />
         )
@@ -82,12 +135,12 @@ const PlayerProfilePage = () => {
 
     return (
         <UniversalProfileView
-            profileId={id} // The view component handles lookup or fetches if needed, but here we ideally pass data? 
-            // Looking at UniversalProfileView, it takes profileId and does lookup in props 'teams'/'officials'. Perfect.
+            profileId={id}
             onBack={handleBack}
             user={user}
             teams={teams}
             officials={officials}
+            teamStaff={teamStaff}
             onEdit={() => setIsEditing(true)}
         />
     );
