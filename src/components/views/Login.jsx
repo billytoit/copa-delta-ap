@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabaseClient';
-import { Shield, Mail, Lock, Loader, AlertCircle } from 'lucide-react';
+import { Shield, Mail, Lock, Loader, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -10,6 +10,7 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [isSignUp, setIsSignUp] = useState(false); // Toggle for simple sign up flow
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -133,17 +134,28 @@ const Login = () => {
                         <div style={{ position: 'relative' }}>
                             <Lock size={18} style={{ position: 'absolute', left: '12px', top: '12px', opacity: 0.5 }} />
                             <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="••••••••"
                                 style={{
-                                    width: '100%', padding: '12px 12px 12px 40px',
+                                    width: '100%', padding: '12px 48px 12px 40px',
                                     borderRadius: '8px', border: '1px solid var(--glass-border)',
                                     background: 'rgba(255,255,255,0.05)', color: 'white', outline: 'none'
                                 }}
                                 required={!loading}
                             />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                style={{
+                                    position: 'absolute', right: '12px', top: '11px',
+                                    background: 'none', border: 'none', color: 'var(--primary)',
+                                    cursor: 'pointer', padding: '2px'
+                                }}
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
                         </div>
                         {!isSignUp && (
                             <button

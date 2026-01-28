@@ -325,3 +325,28 @@ export const getAllowedUsers = async () => {
     }
     return data;
 }
+
+export const getUserRoles = async () => {
+    const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .order('role', { ascending: true });
+
+    if (error) {
+        console.warn("Error fetching user roles:", error);
+        return [];
+    }
+    return data;
+}
+
+export const updateUserRole = async (userId, newRole) => {
+    const { data, error } = await supabase
+        .from('user_roles')
+        .update({ role: newRole.toLowerCase() })
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return data;
+}

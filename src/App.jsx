@@ -25,6 +25,7 @@ import UserProfileView from './components/profile/UserProfileView.jsx';
 import UniversalProfileView from './components/profile/UniversalProfileView.jsx';
 import MatchDetailsPage from './components/views/MatchDetailsPage.jsx';
 import PlayerProfilePage from './components/views/PlayerProfilePage.jsx';
+import ResetPassword from './components/views/ResetPassword.jsx';
 
 // Services
 // Services
@@ -101,12 +102,36 @@ const App = () => {
 
     const handleVote = async (pollId, optionId) => {
         if (!user) return alert("Login required");
+
+        // 1. Snapshot previous state for rollback
+        const previousPolls = [...polls];
+        const previousParticipations = [...userParticipations];
+
+        // 2. Optimistic State Update
+        setPolls(currentPolls => currentPolls.map(p => {
+            if (p.id !== pollId) return p;
+            return {
+                ...p,
+                options: p.options.map(opt => {
+                    if (opt.id !== optionId) return opt;
+                    return { ...opt, votes: (opt.votes || 0) + 1 };
+                })
+            };
+        }));
+        setUserParticipations(prev => [...prev, pollId]);
+
         try {
+            // 3. API Call
             await votePoll(pollId, optionId, user.id);
-            const data = await getPolls();
-            setPolls(data);
-            alert("Voto registrado");
-        } catch (e) { alert(e.message); }
+            // No alert needed for a seamless feel, or keep it if preferred.
+            // But we've already updated the state, so it's "immediate".
+            console.log("Voto sincronizado con el servidor");
+        } catch (e) {
+            // 4. Rollback on failure
+            setPolls(previousPolls);
+            setUserParticipations(previousParticipations);
+            alert("Error al registrar voto: " + e.message);
+        }
     };
 
     // Wrapper for legacy props (HomePage expects onSelect...)
@@ -115,9 +140,62 @@ const App = () => {
     const onSelectPlayerShim = (id) => navigate(`/player/${id}`);
     const onSelectMatchShim = (id) => navigate(`/match/${id}`);
     const onUpdatePlayerShim = async (p) => {
-        // Admin quick edit from home? Or just redirect?
         // Redirecting to profile for edit is consistent
         navigate(`/player/${p.id}`);
+    };
+
+    const handleUpdateUserProfile = async (updatedData) => {
+        try {
+            // 1. Update Profile (Global Identity)
+            const profileUpdates = {
+                full_name: updatedData.name,
+                nickname: updatedData.nickname,
+                bio: updatedData.bio,
+                job: updatedData.job,
+                phone: updatedData.phone,
+                instagram: updatedData.instagram
+            };
+
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .update(profileUpdates)
+                .eq('id', user.id);
+
+            if (profileError) throw profileError;
+
+            // 2. Update Contextual Record (Denormalized data for Lists/Teams)
+            // Use user.playerId and user.type from AppContext
+            if (user.playerId && user.type) {
+                const table = user.type === 'player' ? 'players' :
+                    (user.type === 'staff' ? 'team_staff' :
+                        (user.type === 'official' ? 'officials' : null));
+
+                if (table) {
+                    const contextualUpdates = {
+                        name: updatedData.name,
+                        nickname: updatedData.nickname,
+                        bio: updatedData.bio,
+                        job: updatedData.job,
+                        phone: updatedData.phone,
+                        instagram: updatedData.instagram
+                    };
+
+                    const { error: contextualError } = await supabase
+                        .from(table)
+                        .update(contextualUpdates)
+                        .eq('id', user.playerId);
+
+                    if (contextualError) throw contextualError;
+                }
+            }
+
+            // 3. Refresh Local State
+            await refreshData(true);
+            return true;
+        } catch (e) {
+            console.error("Error updating profile:", e);
+            throw e;
+        }
     };
 
     const navigateHome = () => {
@@ -195,7 +273,8 @@ const App = () => {
 
                 <Route path="/voting" element={<VotingView user={user} polls={polls} userParticipations={userParticipations} onVote={handleVote} onCreatePoll={createPoll} onClosePoll={closePoll} />} />
                 <Route path="/settings" element={<SettingsView teams={teams} onLogout={() => setShowLogoutModal(true)} />} />
-                <Route path="/profile" element={<UserProfileView user={user} onUpdateUser={onUpdatePlayerShim} onLogout={() => setShowLogoutModal(true)} />} />
+                <Route path="/profile" element={<UserProfileView user={user} onUpdateUser={handleUpdateUserProfile} onLogout={() => setShowLogoutModal(true)} />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
 

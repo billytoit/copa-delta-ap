@@ -244,7 +244,7 @@ const VeedorMatchRegistration = ({ match, onBack, teams, onSaveResult, onStartMa
             </div>
 
             {
-                (user.role === 'admin' || user.role === 'official') && (!match.status || match.status === 'scheduled') && (
+                (user.role === 'admin' || user.role === 'official' || user.role === 'veedor') && (!match.status || match.status === 'scheduled') && (
                     <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
                         <h3 style={{ fontSize: '14px', marginBottom: '10px', color: 'var(--primary)' }}>Iniciar Partido</h3>
                         <div style={{ marginBottom: '15px' }}>
@@ -281,7 +281,7 @@ const VeedorMatchRegistration = ({ match, onBack, teams, onSaveResult, onStartMa
             }
 
             {
-                (user.role === 'admin' || user.role === 'official') && (
+                (user.role === 'admin' || user.role === 'official' || user.role === 'veedor') && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '25px' }}>
                         <button
                             onClick={() => setShowGoalForm(true)}
@@ -389,7 +389,7 @@ const VeedorMatchRegistration = ({ match, onBack, teams, onSaveResult, onStartMa
             }
 
             {
-                (user.role === 'admin' || user.role === 'official') && (
+                (user.role === 'admin' || user.role === 'official' || user.role === 'veedor') && (
                     <div className="glass-card" style={{ marginBottom: '20px', opacity: (match.status === 'playing' || user.role === 'admin') ? 1 : 0.5, pointerEvents: (match.status === 'playing' || user.role === 'admin') ? 'auto' : 'none' }}>
                         <h3 style={{ fontSize: '14px', marginBottom: '10px' }}>Notas de Eventualidades</h3>
                         <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder={(match.status === 'playing' || user.role === 'admin') ? "Ej: Interrupción por lluvia, conducta del público..." : "Inicia el partido para agregar notas."} style={{ width: '100%', height: '80px', background: 'var(--glass)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '8px', padding: '10px', fontSize: '13px' }} />
@@ -427,7 +427,7 @@ const VeedorMatchRegistration = ({ match, onBack, teams, onSaveResult, onStartMa
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
                                     <div style={{ fontSize: '12px', fontWeight: 'bold', fontFamily: 'monospace', opacity: 0.8 }}>{ev.timestamp.split(':').slice(0, 2).join(':')}</div>
-                                    {(user.role === 'admin' || user.role === 'official') && (
+                                    {(user.role === 'admin' || user.role === 'official' || user.role === 'veedor') && (
                                         <button onClick={(e) => { e.stopPropagation(); deleteEvent(ev.id); }} style={{ background: '#ef4444', border: 'none', borderRadius: '6px', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><X size={16} color="white" /></button>
                                     )}
                                 </div>
@@ -439,7 +439,7 @@ const VeedorMatchRegistration = ({ match, onBack, teams, onSaveResult, onStartMa
             </div>
 
             {
-                (user.role === 'admin' || user.role === 'official') && (
+                (user.role === 'admin' || user.role === 'official' || user.role === 'veedor') && (
                     match.status === 'finished' ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
                             {user.role === 'admin' && (

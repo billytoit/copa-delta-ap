@@ -15,7 +15,9 @@ const UserProfileView = ({ user, onUpdateUser, onLogout }) => {
     });
 
     const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [saveError, setSaveError] = useState(null);
 
     const handleChange = (field, value) => {
         // Validations
@@ -29,14 +31,22 @@ const UserProfileView = ({ user, onUpdateUser, onLogout }) => {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
-    const handleSave = () => {
-        // Simulate API update
-        if (onUpdateUser) {
-            onUpdateUser({ ...user, ...formData });
+    const handleSave = async () => {
+        setIsSaving(true);
+        setSaveError(null);
+        try {
+            if (onUpdateUser) {
+                await onUpdateUser({ ...user, ...formData });
+            }
+            setIsEditing(false);
+            setShowSuccess(true);
+            setTimeout(() => setShowSuccess(false), 3000);
+        } catch (e) {
+            setSaveError(e.message);
+        } finally {
+            setIsSaving(true); // Wait, should be false
+            setIsSaving(false);
         }
-        setIsEditing(false);
-        setShowSuccess(true);
-        setTimeout(() => setShowSuccess(false), 3000);
     };
 
     const SectionTitle = ({ icon: Icon, title }) => (
@@ -61,10 +71,22 @@ const UserProfileView = ({ user, onUpdateUser, onLogout }) => {
                 )}
 
                 <h2 style={{ fontSize: '20px', marginBottom: '5px' }}>{user.name}</h2>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-                    <span>{user.teamName || 'Sin Equipo'}</span>
-                    <span>•</span>
-                    <span>{user.number ? `#${user.number}` : 'N/A'}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                    <div style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '4px', fontWeight: 'bold', color: 'var(--primary)', textTransform: 'uppercase', fontSize: '10px' }}>
+                        {user.role === 'admin' ? 'Administrador' :
+                            user.role === 'dirigente' ? 'Dirigente' :
+                                user.role === 'veedor' || user.role === 'official' ? 'Veedor' :
+                                    user.role === 'player' ? 'Jugador' : 'Fan'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <span>{user.teamName || 'Sin Equipo'}</span>
+                        {user.number && (
+                            <>
+                                <span>•</span>
+                                <span>{user.number ? `#${user.number}` : 'N/A'}</span>
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -191,9 +213,18 @@ const UserProfileView = ({ user, onUpdateUser, onLogout }) => {
 
             {/* Actions */}
             {isEditing && (
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
-                    <button onClick={() => { setIsEditing(false); setFormData({ ...user }); }} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Cancelar</button>
-                    <button onClick={handleSave} style={{ flex: 1, padding: '12px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>Guardar Cambios</button>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '30px' }}>
+                    {saveError && (
+                        <div style={{ padding: '10px', background: 'rgba(239, 68, 68, 0.2)', border: '1px solid #ef4444', borderRadius: '8px', color: '#fca5a5', fontSize: '12px', textAlign: 'center' }}>
+                            Error: {saveError}
+                        </div>
+                    )}
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button disabled={isSaving} onClick={() => { setIsEditing(false); setFormData({ ...user }); setSaveError(null); }} style={{ flex: 1, padding: '12px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', opacity: isSaving ? 0.5 : 1 }}>Cancelar</button>
+                        <button disabled={isSaving} onClick={handleSave} style={{ flex: 1, padding: '12px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: isSaving ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            {isSaving ? <Loader size={16} className="spin" /> : 'Guardar Cambios'}
+                        </button>
+                    </div>
                 </div>
             )}
 

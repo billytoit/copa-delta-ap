@@ -30,7 +30,7 @@ const HomePage = ({
                 const isScheduled = (!m.status || m.status === 'scheduled');
                 if (!isScheduled) return false;
 
-                if (user.role === 'player' && user.teamId) {
+                if (user.role?.toLowerCase() === 'player' && user.teamId) {
                     return m.team_a_id === user.teamId || m.team_b_id === user.teamId;
                 }
                 return true;
@@ -46,7 +46,7 @@ const HomePage = ({
             <div className="fade-in">
                 {/* Header moved to App level */}
 
-                {user.role === 'admin' ? (
+                {user.role?.toLowerCase() === 'admin' ? (
                     <AdminDashboard
                         user={user}
                         teams={teams || []}
@@ -57,12 +57,12 @@ const HomePage = ({
                         onAddPlayer={onAddPlayer}
                         onUpdateTeam={handleUpdateTeam}
                     />
-                ) : user.role === 'operador' ? (
+                ) : (user.role?.toLowerCase() === 'operador' || user.role?.toLowerCase() === 'dirigente') ? (
                     <TeamManager user={user} teamId={user.teamId} onSelectPlayer={onSelectPlayer} teams={teams || []} onAddPlayer={onAddPlayer} onUpdateTeam={handleUpdateTeam} />
                 ) : (
                     <>
-                        {/* Hide SocialBanner for Veedor */}
-                        {user.role !== 'official' && <SocialBanner />}
+                        {/* Hide SocialBanner for officials (Veedor/Dirigente/Admin) */}
+                        {user.role?.toLowerCase() !== 'veedor' && user.role?.toLowerCase() !== 'official' && user.role?.toLowerCase() !== 'dirigente' && <SocialBanner />}
 
                         {nextMatch && (
                             <div
@@ -82,9 +82,9 @@ const HomePage = ({
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-sm)' }}>
                                     <h2 style={{ fontSize: '14px', color: 'var(--primary)', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                                        {(user.role === 'official' || user.role === 'player') ? 'Tu Próximo Partido' : 'Próximo Partido'}
+                                        {(user.role?.toLowerCase() === 'official' || user.role?.toLowerCase() === 'veedor' || user.role?.toLowerCase() === 'dirigente' || user.role?.toLowerCase() === 'player') ? 'Tu Próximo Partido' : 'Próximo Partido'}
                                     </h2>
-                                    {user.role === 'official' && <Edit3 size={14} color="var(--primary)" />}
+                                    {(user.role?.toLowerCase() === 'official' || user.role?.toLowerCase() === 'veedor') && <Edit3 size={14} color="var(--primary)" />}
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ textAlign: 'center', flex: 1 }}>

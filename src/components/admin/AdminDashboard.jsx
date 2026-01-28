@@ -3,36 +3,78 @@ import { Users, Shield, Edit3, X, ChevronLeft } from 'lucide-react';
 import PlayerAvatar from '../shared/PlayerAvatar.jsx';
 import EditPlayerForm from './EditPlayerForm.jsx';
 import TeamManager from './TeamManager.jsx';
-import { getAllowedUsers } from '../../services/database.js';
+import { getAllowedUsers, getUserRoles, updateUserRole } from '../../services/database.js';
+import { UserCheck, UserX, Save, RefreshCw } from 'lucide-react';
+
 
 const UsersList = () => {
-    const [users, setUsers] = useState([]);
+    const [allowedUsers, setAllowedUsers] = useState([]);
+    const [activeRoles, setActiveRoles] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(null); // ID of user being updated
+
+    const loadData = async () => {
+        setLoading(true);
+        const [allowed, active] = await Promise.all([
+            getAllowedUsers(),
+            getUserRoles()
+        ]);
+        setAllowedUsers(allowed || []);
+        setActiveRoles(active || []);
+        setLoading(false);
+    };
 
     useEffect(() => {
-        const load = async () => {
-            const data = await getAllowedUsers();
-            setUsers(data || []);
-            setLoading(false);
-        };
-        load();
+        loadData();
     }, []);
 
-    const [searchTerm, setSearchTerm] = useState('');
+    const handleUpdateRole = async (userId, newRole) => {
+        try {
+            setUpdating(userId);
+            await updateUserRole(userId, newRole);
+            await loadData(); // Refresh list
+        } catch (err) {
+            alert("Error al actualizar rol: " + err.message);
+        } finally {
+            setUpdating(null);
+        }
+    };
 
-    const filteredUsers = users.filter(u =>
+    const [searchTerm, setSearchTerm] = useState('');
+    const [viewMode, setViewMode] = useState('active'); // 'active' or 'whitelist'
+
+    const filteredActive = activeRoles.filter(u =>
+        (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+
+    const filteredWhitelist = allowedUsers.filter(u =>
         (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (u.full_name && u.full_name.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-    if (loading) return <div style={{ textAlign: 'center', padding: '20px', fontSize: '12px' }}>Cargando lista de acceso...</div>;
+    if (loading) return <div style={{ textAlign: 'center', padding: '40px', fontSize: '12px' }}><RefreshCw className="spin" size={20} style={{ marginBottom: '10px' }} /><br />Cargando gestión de usuarios...</div>;
 
     return (
         <div>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                <button
+                    onClick={() => setViewMode('active')}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: viewMode === 'active' ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: 'white', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}
+                >
+                    Roles Activos
+                </button>
+                <button
+                    onClick={() => setViewMode('whitelist')}
+                    style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: viewMode === 'whitelist' ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: 'white', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer' }}
+                >
+                    Whitelist (Invitar)
+                </button>
+            </div>
+
             <div style={{ marginBottom: '15px' }}>
                 <input
                     type="text"
-                    placeholder="Buscar por correo o nombre..."
+                    placeholder={viewMode === 'active' ? "Buscar por correo..." : "Buscar por correo o nombre..."}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{
@@ -47,18 +89,97 @@ const UsersList = () => {
                     }}
                 />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '400px', overflowY: 'auto' }}>
-                {filteredUsers.map(u => (
-                    <div key={u.email} style={{ padding: '10px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                            <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{u.email}</div>
-                            <div style={{ fontSize: '11px', color: u.assigned_role === 'admin' ? '#eab308' : 'var(--text-secondary)' }}>
-                                {u.full_name} ({u.assigned_role})
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '500px', overflowY: 'auto', paddingRight: '5px' }}>
+                {viewMode === 'active' ? (
+                    filteredActive.map(u => (
+                        <div key={u.user_id} style={{ padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ fontWeight: 'bold', fontSize: '13px', color: 'white', wordBreak: 'break-all' }}>{u.email}</div>
+                                    <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginTop: '2px' }}>ID: {u.user_id}</div>
+                                </div>
+                                <div style={{
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    fontSize: '10px',
+                                    fontWeight: 'bold',
+                                    background: u.role === 'pending' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                                    color: u.role === 'pending' ? '#fca5a5' : '#6ee7b7',
+                                    textTransform: 'uppercase'
+                                }}>
+                                    {u.role}
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <select
+                                    value={u.role}
+                                    disabled={updating === u.user_id}
+                                    onChange={(e) => handleUpdateRole(u.user_id, e.target.value)}
+                                    style={{
+                                        flex: 1,
+                                        padding: '8px',
+                                        borderRadius: '6px',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid var(--glass-border)',
+                                        color: 'white',
+                                        fontSize: '12px',
+                                        outline: 'none',
+                                        color: 'white'
+                                    }}
+                                >
+                                    <option value="pending" style={{ color: 'black' }}>Pending (Bloqueado)</option>
+                                    <option value="player" style={{ color: 'black' }}>Jugador</option>
+                                    <option value="dirigente" style={{ color: 'black' }}>Dirigente</option>
+                                    <option value="veedor" style={{ color: 'black' }}>Veedor</option>
+                                    <option value="admin" style={{ color: 'black' }}>Administrador</option>
+                                    <option value="fan" style={{ color: 'black' }}>Fan / Público</option>
+                                </select>
+
+                                {u.role === 'pending' && (
+                                    <button
+                                        onClick={() => handleUpdateRole(u.user_id, 'dirigente')}
+                                        disabled={updating === u.user_id}
+                                        style={{
+                                            padding: '8px 12px',
+                                            background: 'var(--primary)',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderRadius: '6px',
+                                            fontSize: '11px',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px'
+                                        }}
+                                    >
+                                        <UserCheck size={14} /> Aprobar
+                                    </button>
+                                )}
                             </div>
                         </div>
-                    </div>
-                ))}
-                {filteredUsers.length === 0 && <div style={{ opacity: 0.5, textAlign: 'center', padding: '20px' }}>No se encontraron usuarios.</div>}
+                    ))
+                ) : (
+                    filteredWhitelist.map(u => (
+                        <div key={u.email} style={{ padding: '12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontWeight: 'bold', fontSize: '13px' }}>{u.full_name || 'Sin nombre'}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{u.email}</div>
+                                </div>
+                                <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                    {u.assigned_role}
+                                </div>
+                            </div>
+                        </div>
+                    ))
+                )}
+
+                {(viewMode === 'active' ? filteredActive : filteredWhitelist).length === 0 && (
+                    <div style={{ opacity: 0.5, textAlign: 'center', padding: '40px' }}>No se encontraron registros.</div>
+                )}
             </div>
         </div>
     );

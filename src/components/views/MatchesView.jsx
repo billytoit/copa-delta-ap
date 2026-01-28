@@ -188,10 +188,10 @@ const MatchesView = ({ matches, user, onSelectMatch, teams = [] }) => {
                                 <div style={{ padding: '0 15px 15px' }}>
                                     <button
                                         onClick={() => onSelectMatch(m.id)}
-                                        style={{ width: '100%', padding: '10px', background: (user.role === 'official' || user.role === 'admin') ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '900', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                        style={{ width: '100%', padding: '10px', background: (user.role === 'official' || user.role === 'veedor' || user.role === 'admin') ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '900', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                                     >
                                         <Edit3 size={14} />
-                                        {(user.role === 'official' || user.role === 'admin')
+                                        {(user.role === 'official' || user.role === 'veedor' || user.role === 'admin')
                                             ? ((m.status === 'finished' || m.time === 'Finalizado') ? 'EDITAR EVENTO' : 'REGISTRAR EVENTOS')
                                             : 'VER DETALLES DEL PARTIDO'}
                                     </button>

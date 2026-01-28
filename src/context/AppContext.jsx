@@ -67,35 +67,44 @@ export const AppProvider = ({ children }) => {
                 .eq('profile_id', authUser.id)
                 .maybeSingle();
 
-            // 4. Fallback for Officials if no player record
-            let officialData = null;
+            // 4. Fallback for Team Staff (Dirigentes/Delegados)
+            let staffMemberData = null;
             if (!playerData) {
+                const { data } = await supabase
+                    .from('team_staff')
+                    .select('*, team:teams(*)')
+                    .eq('profile_id', authUser.id)
+                    .maybeSingle();
+                staffMemberData = data;
+            }
+
+            // 5. Fallback for Officials (Referees/Veedores) if no staff/player record
+            let officialData = null;
+            if (!playerData && !staffMemberData) {
                 const { data } = await supabase
                     .from('officials')
                     .select('*')
-                    .eq('profile_id', authUser.id)
+                    .eq('id', authUser.id)
                     .maybeSingle();
                 officialData = data;
             }
 
             // Enrich user object
             setUser({
-                ...authUser, // Spread authUser FIRST
+                ...authUser,
                 id: authUser.id,
                 email: authUser.email,
-                role: role, // Explicit role overrides authUser.role
-                name: profile.full_name || playerData?.name || officialData?.name || authUser.email.split('@')[0],
-                avatar: profile.avatar_url || playerData?.photo_url || officialData?.photo_url,
-                // Merged Player Data
-                teamName: playerData?.team?.name,
-                teamId: playerData?.team_id,
-                teamColor: playerData?.team?.color,
-                number: playerData?.number,
-                playerId: playerData?.id,
+                role: role,
+                name: profile.full_name || playerData?.name || staffMemberData?.name || officialData?.name || authUser.email.split('@')[0],
+                avatar: profile.avatar_url || playerData?.photo_url || staffMemberData?.photo_url || officialData?.photo_url,
+                // Merged Team/Context Data
+                teamName: playerData?.team?.name || staffMemberData?.team?.name,
+                teamId: playerData?.team_id || staffMemberData?.team_id,
+                teamColor: playerData?.team?.color || staffMemberData?.team?.color,
+                number: playerData?.number || (staffMemberData ? 'DIR' : null),
+                playerId: playerData?.id || staffMemberData?.id || officialData?.id,
+                type: playerData ? 'player' : (staffMemberData ? 'staff' : (officialData ? 'official' : (role.toLowerCase() === 'dirigente' ? 'staff' : (role.toLowerCase() === 'veedor' ? 'official' : 'fan')))),
                 ...profile,
-                // Ensure bio/job/etc are available even if profile is empty but player has them?
-                // Actually players table might not have bio/job, usually it's in profile.
-                // But let's be safe.
                 stats: playerData?.stats,
             });
         } catch (err) {
