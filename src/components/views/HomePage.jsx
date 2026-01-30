@@ -89,16 +89,16 @@ const HomePage = ({
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ textAlign: 'center', flex: 1 }}>
                                         <div style={{ width: '50px', height: '50px', background: 'var(--glass)', borderRadius: 'var(--radius-sm)', margin: '0 auto 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
-                                            <Shield size={24} color={nextMatch.teamA?.color || nextMatch.team_a_color || '#CB3524'} />
+                                            <Shield size={24} color={nextMatch.teamA_obj?.color || nextMatch.team_a_color || '#CB3524'} />
                                         </div>
-                                        <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{nextMatch.teamA?.name || nextMatch.team_a_name || 'Equipo A'}</span>
+                                        <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{nextMatch.teamA_obj?.name || nextMatch.teamA || 'Equipo A'}</span>
                                     </div>
                                     <div style={{ fontSize: '16px', fontWeight: '800', opacity: 0.5, padding: '0 10px' }}>VS</div>
                                     <div style={{ textAlign: 'center', flex: 1 }}>
                                         <div style={{ width: '50px', height: '50px', background: 'var(--glass)', borderRadius: 'var(--radius-sm)', margin: '0 auto 8px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--glass-border)' }}>
-                                            <Shield size={24} color={nextMatch.teamB?.color || nextMatch.team_b_color || '#034694'} />
+                                            <Shield size={24} color={nextMatch.teamB_obj?.color || nextMatch.team_b_color || '#034694'} />
                                         </div>
-                                        <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{nextMatch.teamB?.name || nextMatch.team_b_name || 'Equipo B'}</span>
+                                        <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{nextMatch.teamB_obj?.name || nextMatch.teamB || 'Equipo B'}</span>
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'center', marginTop: 'var(--spacing-md)', fontSize: '11px', color: 'var(--text-secondary)', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '4px' }}>

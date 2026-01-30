@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Shield, ChevronLeft, Edit3, X } from 'lucide-react';
+import { Shield, ChevronLeft, Edit3, X, Users } from 'lucide-react';
 import PlayerAvatar from '../shared/PlayerAvatar.jsx';
 import { uploadImage } from '../../services/storage.js';
 
 const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }) => {
     const [searchTerm, setSearchTerm] = useState('');
+    const [isNetworkingMode, setIsNetworkingMode] = useState(false);
     const navigate = useNavigate();
     const { teamId } = useParams();
     const selectedTeamId = teamId ? parseInt(teamId) : null;
@@ -16,17 +17,51 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
         }
     }, [selectedTeamId]);
 
-    const playerResults = searchTerm ? teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamColor: t.color, teamName: t.name }))).filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.nickname && p.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
-    ) : [];
+    const playerResults = searchTerm ? teams.flatMap(t => (t.players || []).map(p => ({ ...p, teamColor: t.color, teamName: t.name }))).filter(p => {
+        if (isNetworkingMode) {
+            // Networking search: only show opted-in users and search by job/keywords
+            return p.is_networker && (
+                (p.job && p.job.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (p.network_keywords && p.network_keywords.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+        }
+        // Original search: search by name/nickname
+        return p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (p.nickname && p.nickname.toLowerCase().includes(searchTerm.toLowerCase()));
+    }) : [];
 
-    const officialResults = searchTerm ? officials.map(o => ({ ...o, teamName: 'Oficial del Torneo', teamColor: 'var(--primary)', type: 'official' })).filter(o =>
-        o.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (o.nickname && o.nickname.toLowerCase().includes(searchTerm.toLowerCase()))
-    ) : [];
+    const officialResults = searchTerm ? officials.map(o => ({ ...o, teamName: 'Oficial del Torneo', teamColor: 'var(--primary)', type: 'official' })).filter(o => {
+        if (isNetworkingMode) {
+            return o.is_networker && (
+                (o.job && o.job.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                (o.network_keywords && o.network_keywords.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+        }
+        return o.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (o.nickname && o.nickname.toLowerCase().includes(searchTerm.toLowerCase()));
+    }) : [];
 
-    const searchResults = [...playerResults, ...officialResults];
+    const searchResults = [...playerResults, ...officialResults].sort((a, b) => {
+        // Advanced Robust Score: 
+        // Supabase Photo = 200 (Real photo)
+        // External Real Photo = 150-180
+        // Placeholder/Generic = 100
+        // No Photo = 0
+        const getScore = (p) => {
+            const u = p.photo_url || '';
+            if (!u || u.length < 5) return 0;
+            if (u.includes('supabase.co')) return 200;
+            if (u.includes('googleusercontent.com')) return 180;
+            if (u.includes('ui-avatars.com') || u.includes('dicebear.com') || u.includes('placeholder')) return 100;
+            return 150; // Likely a real external photo
+        };
+
+        const scoreA = getScore(a);
+        const scoreB = getScore(b);
+
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return (a.nickname || a.name || '').localeCompare(b.nickname || b.name || '');
+    });
 
     const selectedTeam = selectedTeamId ? teams.find(t => t.id === selectedTeamId) : null;
 
@@ -64,15 +99,36 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
                 <>
                     <h1 className="title-gradient" style={{ marginBottom: '20px' }}>Equipos 2026</h1>
 
-                    <div style={{ marginBottom: '20px', position: 'relative' }}>
-                        <input
-                            type="text"
-                            placeholder="Buscar jugador por nombre o apodo..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ width: '100%', padding: '12px 15px', background: 'var(--glass)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '12px', fontSize: '14px' }}
-                        />
-                        {searchTerm && <X size={18} style={{ position: 'absolute', right: '12px', top: '12px', opacity: 0.5, cursor: 'pointer' }} onClick={() => setSearchTerm('')} />}
+                    <div style={{ marginBottom: '20px', display: 'flex', gap: '8px' }}>
+                        <div style={{ flex: 1, position: 'relative' }}>
+                            <input
+                                type="text"
+                                placeholder={isNetworkingMode ? "Ej: Paneles Solares, Abogado..." : "Buscar jugador por nombre o apodo..."}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{ width: '100%', padding: '12px 15px', background: 'var(--glass)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '12px', fontSize: '14px' }}
+                            />
+                            {searchTerm && <X size={18} style={{ position: 'absolute', right: '12px', top: '12px', opacity: 0.5, cursor: 'pointer' }} onClick={() => setSearchTerm('')} />}
+                        </div>
+                        <button
+                            onClick={() => setIsNetworkingMode(!isNetworkingMode)}
+                            style={{
+                                padding: '0 15px',
+                                background: isNetworkingMode ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                                color: 'white',
+                                border: '1px solid var(--glass-border)',
+                                borderRadius: '12px',
+                                fontSize: '12px',
+                                fontWeight: 'bold',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                transition: 'all 0.3s ease'
+                            }}
+                        >
+                            <Users size={16} />
+                            {isNetworkingMode ? 'Networking' : 'Buscador'}
+                        </button>
                     </div>
 
                     {searchTerm ? (
@@ -95,9 +151,11 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
                                     <PlayerAvatar photo={p.photo_url} name={p.name} size={35} borderColor={p.teamColor} />
                                     <div style={{ marginLeft: '12px', flex: 1 }}>
                                         <div style={{ fontWeight: '800', fontSize: '14px' }}>
-                                            {p.nickname ? `${p.nickname} (${p.name})` : p.name}
+                                            {p.name}
                                         </div>
-                                        <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{p.type === 'official' ? 'Oficial' : p.teamName}</div>
+                                        <div style={{ fontSize: '10px', color: isNetworkingMode ? 'var(--primary)' : 'var(--text-secondary)', fontWeight: isNetworkingMode ? 'bold' : 'normal' }}>
+                                            {isNetworkingMode ? (p.job || p.network_keywords || 'Networking Activo') : (p.type === 'official' ? 'Oficial' : p.teamName)}
+                                        </div>
                                     </div>
                                     {p.number && <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: 'bold' }}>#{p.number}</span>}
                                 </div>
@@ -106,36 +164,45 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
                         </div>
                     ) : (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--spacing-md)' }}>
-                            {teams.map(team => (
-                                <div
-                                    key={team.id}
-                                    onClick={() => navigate(`/teams/${team.id}`)}
-                                    className="glass-card"
-                                    style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: 'var(--spacing-md)' }}
-                                >
-                                    <div style={{
-                                        width: '60px',
-                                        height: '60px',
-                                        background: 'var(--glass)',
-                                        borderRadius: 'var(--radius-md)',
-                                        marginBottom: '12px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        border: `2px solid ${team.color || 'var(--glass-border)'}`,
-                                        overflow: 'hidden',
-                                        padding: '5px'
-                                    }}>
-                                        {team.logo_url ? (
-                                            <img src={team.logo_url} alt={team.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                                        ) : (
-                                            <Shield size={32} color={team.color || 'var(--text-secondary)'} />
-                                        )}
+                            {[...teams]
+                                .sort((a, b) => {
+                                    // High priority: teams with logos
+                                    const hasLogoA = !!a.logo_url;
+                                    const hasLogoB = !!b.logo_url;
+                                    if (hasLogoA && !hasLogoB) return -1;
+                                    if (!hasLogoA && hasLogoB) return 1;
+                                    return 0;
+                                })
+                                .map(team => (
+                                    <div
+                                        key={team.id}
+                                        onClick={() => navigate(`/teams/${team.id}`)}
+                                        className="glass-card"
+                                        style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', padding: 'var(--spacing-md)' }}
+                                    >
+                                        <div style={{
+                                            width: '60px',
+                                            height: '60px',
+                                            background: 'var(--glass)',
+                                            borderRadius: 'var(--radius-md)',
+                                            marginBottom: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            border: `2px solid ${team.color || 'var(--glass-border)'}`,
+                                            overflow: 'hidden',
+                                            padding: '5px'
+                                        }}>
+                                            {team.logo_url ? (
+                                                <img src={team.logo_url} alt={team.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                            ) : (
+                                                <Shield size={32} color={team.color || 'var(--text-secondary)'} />
+                                            )}
+                                        </div>
+                                        <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>{team.name}</h3>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Ver Plantilla</p>
                                     </div>
-                                    <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '4px' }}>{team.name}</h3>
-                                    <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Ver Plantilla</p>
-                                </div>
-                            ))}
+                                ))}
                         </div>
                     )}
                 </>
@@ -229,11 +296,35 @@ const TeamsView = ({ teams, officials = [], onSelectPlayer, user, onUpdateTeam }
 
                     <h3 style={{ fontSize: '16px', marginBottom: '15px', paddingLeft: '5px' }}>Lista de Jugadores {(selectedTeam.players || []).length}</h3>
                     <div className="glass-card" style={{ padding: '0' }}>
-                        {(selectedTeam.players || [])
+                        {[...(selectedTeam.players || [])]
                             .sort((a, b) => {
-                                if (a.isStaff && !b.isStaff) return -1;
-                                if (!a.isStaff && b.isStaff) return 1;
-                                return 0;
+                                // Super-Robust Face-First Sorting: 
+                                // Supabase Photo = 200 (Highest priority - Real face)
+                                // External Real Photo = 180 (Google, etc.)
+                                // Unknown Image = 150
+                                // Placeholder/Circle = 100 (ui-avatars, etc.)
+                                // No Photo = 0
+                                // Staff Bonus = 10
+                                const getScore = (p) => {
+                                    const u = p.photo_url || p.photo || '';
+                                    if (typeof u !== 'string' || u.length < 5) return 0;
+                                    if (u.includes('supabase.co')) return 200;
+                                    if (u.includes('googleusercontent.com')) return 180;
+                                    if (u.includes('ui-avatars.com') || u.includes('dicebear.com') || u.includes('placeholder')) return 100;
+                                    return 150;
+                                };
+
+                                const scoreA = getScore(a);
+                                const scoreB = getScore(b);
+
+                                const staffA = a.isStaff ? 10 : 0;
+                                const staffB = b.isStaff ? 10 : 0;
+
+                                const totalA = scoreA + staffA;
+                                const totalB = scoreB + staffB;
+
+                                if (totalA !== totalB) return totalB - totalA;
+                                return (a.nickname || a.name || '').localeCompare(b.nickname || b.name || '');
                             })
                             .map((p, idx, arr) => (
                                 <div

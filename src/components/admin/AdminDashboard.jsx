@@ -215,12 +215,31 @@ const AdminDashboard = ({ user, teams = [], officials = [], teamStaff = [], onUp
     const totalPlayers = allPlayers.length || 0;
     const totalTeams = (teams || []).length;
 
-    const filteredPlayers = allPlayers.filter(p => {
-        const nameText = (p.name || '').toLowerCase();
-        const nickText = (p.nickname || '').toLowerCase();
-        const search = (searchTerm || '').toLowerCase();
-        return nameText.includes(search) || nickText.includes(search);
-    });
+    const filteredPlayers = allPlayers
+        .filter(p => {
+            const nameText = (p.name || '').toLowerCase();
+            const nickText = (p.nickname || '').toLowerCase();
+            const search = (searchTerm || '').toLowerCase();
+            return nameText.includes(search) || nickText.includes(search);
+        })
+        .sort((a, b) => {
+            // Advanced Robust Score: 
+            // Supabase = 200, External Real = 180, Unknown = 150, Placeholder = 100, None = 0
+            const getScore = (p) => {
+                const u = p.photo_url || p.photo || '';
+                if (!u || u.length < 5) return 0;
+                if (u.includes('supabase.co')) return 200;
+                if (u.includes('googleusercontent.com')) return 180;
+                if (u.includes('ui-avatars.com') || u.includes('dicebear.com') || u.includes('placeholder')) return 100;
+                return 150;
+            };
+
+            const scoreA = getScore(a);
+            const scoreB = getScore(b);
+
+            if (scoreA !== scoreB) return scoreB - scoreA;
+            return (a.nickname || a.name || '').localeCompare(b.nickname || b.name || '');
+        });
 
     return (
         <div className="fade-in">
@@ -340,22 +359,37 @@ const AdminDashboard = ({ user, teams = [], officials = [], teamStaff = [], onUp
             {tab === 'staff' && (
                 <div className="fade-in">
                     <div className="glass-card" style={{ padding: '0', maxHeight: '500px', overflowY: 'auto' }}>
-                        {(teamStaff || []).length > 0 ? (teamStaff || []).map(s => (
-                            <div
-                                key={s.id}
-                                onClick={() => onSelectPlayer(s.profile_id || s.id)}
-                                style={{ display: 'flex', alignItems: 'center', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '10px', cursor: 'pointer' }}
-                            >
-                                <PlayerAvatar photo={s.photo_url} name={s.name} size={40} borderColor={s.team?.color || 'var(--primary)'} />
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{s.name}</div>
-                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Dirigente de {s.team?.name || 'equipo'}</div>
+                        {(teamStaff || []).length > 0 ? [...(teamStaff || [])]
+                            .sort((a, b) => {
+                                const getScore = (p) => {
+                                    const u = p.photo_url || p.photo || '';
+                                    if (!u || u.length < 5) return 0;
+                                    if (u.includes('supabase.co')) return 200;
+                                    if (u.includes('googleusercontent.com')) return 180;
+                                    if (u.includes('ui-avatars.com') || u.includes('dicebear.com') || u.includes('placeholder')) return 100;
+                                    return 150;
+                                };
+                                const scoreA = getScore(a);
+                                const scoreB = getScore(b);
+                                if (scoreA !== scoreB) return scoreB - scoreA;
+                                return (a.name || '').localeCompare(b.name || '');
+                            })
+                            .map(s => (
+                                <div
+                                    key={s.id}
+                                    onClick={() => onSelectPlayer(s.profile_id || s.id)}
+                                    style={{ display: 'flex', alignItems: 'center', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '10px', cursor: 'pointer' }}
+                                >
+                                    <PlayerAvatar photo={s.photo_url} name={s.name} size={40} borderColor={s.team?.color || 'var(--primary)'} />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{s.name}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Dirigente de {s.team?.name || 'equipo'}</div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: 'bold' }}>Ver Perfil</div>
+                                    </div>
                                 </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: 'bold' }}>Ver Perfil</div>
-                                </div>
-                            </div>
-                        )) : (
+                            )) : (
                             <div style={{ padding: '20px', textAlign: 'center', opacity: 0.5 }}>No hay dirigentes registrados.</div>
                         )}
                     </div>
@@ -365,22 +399,37 @@ const AdminDashboard = ({ user, teams = [], officials = [], teamStaff = [], onUp
             {tab === 'officials' && (
                 <div className="fade-in">
                     <div className="glass-card" style={{ padding: '0', maxHeight: '500px', overflowY: 'auto' }}>
-                        {(officials || []).length > 0 ? (officials || []).map(o => (
-                            <div
-                                key={o.id}
-                                onClick={() => onSelectPlayer(o.id)}
-                                style={{ display: 'flex', alignItems: 'center', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '10px', cursor: 'pointer' }}
-                            >
-                                <PlayerAvatar photo={o.photo_url} name={o.name} size={40} borderColor="var(--primary)" />
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{o.name}</div>
-                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Veedor / Árbitro</div>
+                        {(officials || []).length > 0 ? [...(officials || [])]
+                            .sort((a, b) => {
+                                const getScore = (p) => {
+                                    const u = p.photo_url || p.photo || '';
+                                    if (!u || u.length < 5) return 0;
+                                    if (u.includes('supabase.co')) return 200;
+                                    if (u.includes('googleusercontent.com')) return 180;
+                                    if (u.includes('ui-avatars.com') || u.includes('dicebear.com') || u.includes('placeholder')) return 100;
+                                    return 150;
+                                };
+                                const scoreA = getScore(a);
+                                const scoreB = getScore(b);
+                                if (scoreA !== scoreB) return scoreB - scoreA;
+                                return (a.name || '').localeCompare(b.name || '');
+                            })
+                            .map(o => (
+                                <div
+                                    key={o.id}
+                                    onClick={() => onSelectPlayer(o.id)}
+                                    style={{ display: 'flex', alignItems: 'center', padding: '10px 15px', borderBottom: '1px solid var(--glass-border)', gap: '10px', cursor: 'pointer' }}
+                                >
+                                    <PlayerAvatar photo={o.photo_url} name={o.name} size={40} borderColor="var(--primary)" />
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontWeight: 'bold', fontSize: '14px' }}>{o.name}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Veedor / Árbitro</div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: 'bold' }}>Ver Perfil</div>
+                                    </div>
                                 </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: 'bold' }}>Ver Perfil</div>
-                                </div>
-                            </div>
-                        )) : (
+                            )) : (
                             <div style={{ padding: '20px', textAlign: 'center', opacity: 0.5 }}>No hay oficiales registrados.</div>
                         )}
                     </div>

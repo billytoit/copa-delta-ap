@@ -217,7 +217,10 @@ const VeedorMatchRegistration = ({ match, onBack, teams, onSaveResult, onStartMa
 
             <div className="glass-card" style={{ marginBottom: '20px', padding: '15px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>PLANILLA DE CONTROL #{match.id}</span>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>PLANILLA DE CONTROL #{match.id}</span>
+                        <span style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: 'bold', marginTop: '2px' }}>{match.date} - {match.time}</span>
+                    </div>
                     {match.status === 'playing' ? (
                         <div style={{ padding: '4px 10px', background: 'rgba(34, 197, 94, 0.2)', border: '1px solid #22c55e', borderRadius: '4px', color: '#22c55e', fontSize: '12px', fontWeight: 'bold' }}>
                             EN JUEGO • {elapsedTime}
@@ -468,18 +471,33 @@ const VeedorMatchRegistration = ({ match, onBack, teams, onSaveResult, onStartMa
                             <div key={teamName} style={{ marginBottom: '30px' }}>
                                 <h3 style={{ color: 'var(--primary)', marginBottom: '15px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '10px' }}>{teamName}</h3>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                    {allPlayers.filter(p => p.teamName === teamName).map(p => {
-                                        const isPresent = attendance.includes(p.id);
-                                        return (
-                                            <div key={p.id} onClick={() => toggleAttendance(p.id)} style={{ padding: '12px', background: isPresent ? 'rgba(37, 99, 235, 0.1)' : 'rgba(255,255,255,0.02)', border: isPresent ? '1px solid var(--primary)' : '1px solid transparent', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: isPresent ? 'var(--primary)' : 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                    {isPresent && <Check size={14} color="white" />}
+                                    {allPlayers.filter(p => p.teamName === teamName)
+                                        .sort((a, b) => {
+                                            const getScore = (p) => {
+                                                const u = p.photo_url || p.photo || '';
+                                                if (!u || u.length < 5) return 0;
+                                                if (u.includes('supabase.co')) return 200;
+                                                if (u.includes('googleusercontent.com')) return 180;
+                                                if (u.includes('ui-avatars.com') || u.includes('dicebear.com') || u.includes('placeholder')) return 100;
+                                                return 150;
+                                            };
+                                            const scoreA = getScore(a);
+                                            const scoreB = getScore(b);
+                                            if (scoreA !== scoreB) return scoreB - scoreA;
+                                            return (a.nickname || a.name || '').localeCompare(b.nickname || b.name || '');
+                                        })
+                                        .map(p => {
+                                            const isPresent = attendance.includes(p.id);
+                                            return (
+                                                <div key={p.id} onClick={() => toggleAttendance(p.id)} style={{ padding: '12px', background: isPresent ? 'rgba(37, 99, 235, 0.1)' : 'rgba(255,255,255,0.02)', border: isPresent ? '1px solid var(--primary)' : '1px solid transparent', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: isPresent ? 'var(--primary)' : 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        {isPresent && <Check size={14} color="white" />}
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--primary)', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', minWidth: '24px', textAlign: 'center', marginRight: '8px' }}>{p.number}</div>
+                                                    <span style={{ fontSize: '13px', fontWeight: isPresent ? 'bold' : 'normal', opacity: isPresent ? 1 : 0.7 }}>{p.nickname || p.name}</span>
                                                 </div>
-                                                <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--primary)', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px', minWidth: '24px', textAlign: 'center', marginRight: '8px' }}>{p.number}</div>
-                                                <span style={{ fontSize: '13px', fontWeight: isPresent ? 'bold' : 'normal', opacity: isPresent ? 1 : 0.7 }}>{p.nickname || p.name}</span>
-                                            </div>
-                                        );
-                                    })}
+                                            );
+                                        })}
                                 </div>
                             </div>
                         ))}

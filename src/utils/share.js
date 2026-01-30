@@ -1,51 +1,65 @@
+const EMOJIS = {
+    TROPHY: '\u{1F3C6}',
+    SOCCER: '\u{26BD}',
+    CALENDAR: '\u{1F4C5}',
+    NOTE: '\u{1F4DD}',
+    YELLOW_CARD: '\u{1F7E8}',
+    RED_CARD: '\u{1F7E5}',
+    COMMENT: '\u{1F4AC}',
+    LINK: '\u{1F517}',
+    TIMER: '\u{23F1}\u{FE0F}',
+    ROCKET: '\u{1F680}',
+    FINISH: '\u{1F3C1}'
+};
+
 export const generateMatchShareText = (match) => {
-    // 1. Basic Info
-    let text = `🏆 *COPA DELTA 2026*\n\n`;
-    text += `⚽ ${match.teamA} ${match.score || 'vs'} ${match.teamB}\n`;
-    text += `📅 ${match.date} - ${match.time}\n`;
+    // 1. Header Info
+    let text = `${EMOJIS.SOCCER} *${match.teamA} ${match.score || 'vs'} ${match.teamB}*\n`;
+    text += `${EMOJIS.CALENDAR} ${match.date} - ${match.time}\n\n`;
 
-    // 2. Events Summary (if finished or playing)
-    if (match.status !== 'scheduled' && match.match_events && match.match_events.length > 0) {
-        text += `\n📝 *Detalles:*\n`;
+    // 2. Chronological Timeline
+    const allEvents = [...(match.match_events || [])].sort((a, b) => (a.event_minute || 0) - (b.event_minute || 0));
 
-        // Goals
-        const goals = match.match_events.filter(e => e.type === 'goal');
-        if (goals.length > 0) {
-            text += `⚽ *Goles:*\n`;
-            goals.forEach(g => {
-                const player = g.player || { name: 'Desconocido' };
-                text += `- ${player.nickname || player.name} (${g.player?.teamName || ''})\n`;
-            });
+    if (match.status !== 'scheduled') {
+        text += `${EMOJIS.TIMER} *Cronología del Match:*\n`;
+        text += `${EMOJIS.ROCKET} *0'* - Inicio del Partido\n`;
+
+        allEvents.forEach(e => {
+            const min = e.event_minute || 0;
+            const type = e.type || e.event_type;
+            const player = e.player || { name: 'Jugador' };
+            const pName = player.nickname || player.name || 'Jugador';
+            const team = e.team_id ? (e.team_id === match.team_a_id ? match.teamA : match.teamB) : '';
+
+            if (type === 'goal') {
+                text += `${EMOJIS.SOCCER} *${min}'* - ¡GOL! ${pName}${team ? ` (${team})` : ''}\n`;
+            } else if (['card', 'yellow_card', 'red_card', 'double_yellow'].includes(type)) {
+                const isRed = type === 'red_card' || type === 'double_yellow' || e.color === 'Roja';
+                const cardIcon = isRed ? EMOJIS.RED_CARD : EMOJIS.YELLOW_CARD;
+                const cardLabel = isRed ? 'Tarjeta Roja' : 'Tarjeta Amarilla';
+                text += `${cardIcon} *${min}'* - ${cardLabel}: ${pName}\n`;
+            } else if (type === 'note') {
+                const noteText = e.text || e.note_text;
+                if (noteText) text += `${EMOJIS.COMMENT} *${min}'* - ${noteText}\n`;
+            }
+        });
+
+        if (match.status === 'finished') {
+            text += `${EMOJIS.FINISH} *Final* - Resultado: ${match.score}\n`;
         }
-
-        // Cards
-        const cards = match.match_events.filter(e => e.type === 'card');
-        if (cards.length > 0) {
-            text += `🟨 *Tarjetas:*\n`;
-            cards.forEach(c => {
-                const player = c.player || { name: 'Desconocido' };
-                const icon = c.color === 'Roja' ? '🟥' : '🟨';
-                text += `${icon} ${player.nickname || player.name} (${c.player?.teamName || ''})\n`;
-            });
-        }
-
-        // Notes (Veedor Comments)
-        const notes = match.match_events.filter(e => e.type === 'note');
-        if (notes.length > 0) {
-            text += `\n💬 *Observaciones:*\n`;
-            notes.forEach(n => {
-                text += `"${n.text}"\n`;
-            });
-        }
+    } else {
+        text += `${EMOJIS.TROPHY} *¡No te pierdas este encuentro!*\n`;
     }
 
-    // 3. Link
-    text += `\n🔗 *Ver Partido:* https://copadelta.app/match/${match.id}`;
+    // 3. Footer
+    text += `\n${EMOJIS.LINK} *Ver en vivo:* https://copadelta.app/match/${match.id}`;
 
-    return encodeURIComponent(text);
+    return text;
 };
 
 export const shareMatchOnWhatsApp = (match) => {
     const text = generateMatchShareText(match);
-    window.open(`https://wa.me/?text=${text}`, '_blank');
+    // Using api.whatsapp.com as it can be more reliable in some PWA contexts
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
 };

@@ -163,6 +163,8 @@ export const AppProvider = ({ children }) => {
                         time: m.scheduled_at ? new Date(m.scheduled_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : 'Próximo',
                         teamA: m.teamA?.name || 'Error',
                         teamB: m.teamB?.name || 'Error',
+                        teamA_obj: m.teamA, // Preserve full object
+                        teamB_obj: m.teamB, // Preserve full object
                         rawDate: m.scheduled_at ? m.scheduled_at.split('T')[0] : 'Por definir'
                     };
                 });

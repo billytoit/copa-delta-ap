@@ -102,11 +102,31 @@ const TeamManager = ({ user, teamId, onSelectPlayer, teams, onAddPlayer, onUpdat
                     </button>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {(team.players || [])
+                    {[...(team.players || [])]
                         .sort((a, b) => {
-                            if (a.isStaff && !b.isStaff) return -1;
-                            if (!a.isStaff && b.isStaff) return 1;
-                            return 0;
+                            // Advanced Robust Face-First Scoring: 
+                            // Supabase = 200, External Real = 180, Unknown Image = 150, Placeholder = 100, No Photo = 0
+                            // Staff Bonus = 10
+                            const getScore = (p) => {
+                                const u = p.photo_url || p.photo || '';
+                                if (!u || u.length < 5) return 0;
+                                if (u.includes('supabase.co')) return 200;
+                                if (u.includes('googleusercontent.com')) return 180;
+                                if (u.includes('ui-avatars.com') || u.includes('dicebear.com') || u.includes('placeholder')) return 100;
+                                return 150;
+                            };
+
+                            const scoreA = getScore(a);
+                            const scoreB = getScore(b);
+
+                            const staffA = a.isStaff ? 10 : 0;
+                            const staffB = b.isStaff ? 10 : 0;
+
+                            const totalA = scoreA + staffA;
+                            const totalB = scoreB + staffB;
+
+                            if (totalA !== totalB) return totalB - totalA;
+                            return (a.nickname || a.name || '').localeCompare(b.nickname || b.name || '');
                         })
                         .map(p => (
                             <div key={p.id} onClick={() => onSelectPlayer(p.id)} className="glass-card" style={{

@@ -12,6 +12,7 @@ import { useApp } from './context/AppContext.jsx';
 import GlobalHeader from './components/shared/GlobalHeader.jsx';
 import ReloadPrompt from './components/shared/ReloadPrompt.jsx';
 import NavButton from './components/navbar/NavButton.jsx';
+import GoldSponsorFooter from './components/shared/GoldSponsorFooter.jsx';
 import HomePage from './components/views/HomePage.jsx';
 import MatchesView from './components/views/MatchesView.jsx';
 import StandingsView from './components/views/StandingsView.jsx';
@@ -26,6 +27,7 @@ import UniversalProfileView from './components/profile/UniversalProfileView.jsx'
 import MatchDetailsPage from './components/views/MatchDetailsPage.jsx';
 import PlayerProfilePage from './components/views/PlayerProfilePage.jsx';
 import ResetPassword from './components/views/ResetPassword.jsx';
+import BenefitsView from './components/views/BenefitsView.jsx';
 
 // Services
 // Services
@@ -153,7 +155,10 @@ const App = () => {
                 bio: updatedData.bio,
                 job: updatedData.job,
                 phone: updatedData.phone,
-                instagram: updatedData.instagram
+                instagram: updatedData.instagram,
+                is_networker: updatedData.is_networker,
+                network_keywords: updatedData.network_keywords,
+                pref_contact: updatedData.pref_contact
             };
 
             const { error: profileError } = await supabase
@@ -177,7 +182,10 @@ const App = () => {
                         bio: updatedData.bio,
                         job: updatedData.job,
                         phone: updatedData.phone,
-                        instagram: updatedData.instagram
+                        instagram: updatedData.instagram,
+                        is_networker: updatedData.is_networker,
+                        network_keywords: updatedData.network_keywords,
+                        pref_contact: updatedData.pref_contact
                     };
 
                     const { error: contextualError } = await supabase
@@ -275,8 +283,12 @@ const App = () => {
                 <Route path="/settings" element={<SettingsView teams={teams} onLogout={() => setShowLogoutModal(true)} />} />
                 <Route path="/profile" element={<UserProfileView user={user} onUpdateUser={handleUpdateUserProfile} onLogout={() => setShowLogoutModal(true)} />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/benefits" element={<BenefitsView />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
+
+            {/* Gold Sponsors - Now at the bottom of the content, not fixed */}
+            {(!location.pathname.startsWith('/match/')) && <GoldSponsorFooter />}
 
             {showLogoutModal && (
                 <div className="fade-in" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
@@ -291,21 +303,31 @@ const App = () => {
             )}
 
             {/* Bottom Nav - Only show on main routes */}
-            {/* Bottom Nav - Only show on main routes (hide on detailed views like match details, but SHOW on player profile as requested) */}
+            {/* Bottom Nav - Only show on main routes (hide on detailed views like match details) */}
             {(!location.pathname.startsWith('/match/')) && (
-
-                <div className="fade-in" style={{
-                    position: 'fixed', bottom: '0', left: '0', width: '100%',
-                    background: 'rgba(3, 7, 18, 0.95)', backdropFilter: 'blur(20px)',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-                    display: 'flex', justifyContent: 'space-around',
-                    padding: '12px 10px 25px 10px', zIndex: 1000
-                }}>
-                    <NavButton icon={Home} label="Inicio" active={location.pathname === '/'} onClick={() => navigate('/')} />
-                    <NavButton icon={Calendar} label="Partidos" active={location.pathname === '/matches'} onClick={() => navigate('/matches')} />
-                    <NavButton icon={Trophy} label="Tablas" active={location.pathname === '/standings'} onClick={() => navigate('/standings')} />
-                    <NavButton icon={Shield} label="Equipos" active={location.pathname === '/teams'} onClick={() => navigate('/teams')} />
-                    <NavButton icon={Vote} label="Votaciones" active={location.pathname === '/voting'} onClick={() => navigate('/voting')} />
+                <div style={{ position: 'fixed', bottom: '0', left: '0', width: '100%', zIndex: 1000 }}>
+                    <div className="fade-in" style={{
+                        background: 'rgba(3, 7, 18, 0.95)', backdropFilter: 'blur(20px)',
+                        borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+                        display: 'flex', justifyContent: 'space-around',
+                        padding: '12px 10px 25px 10px'
+                    }}>
+                        <NavButton icon={Home} label="Inicio" active={location.pathname === '/'} onClick={() => navigate('/')} />
+                        <NavButton icon={Calendar} label="Partidos" active={location.pathname === '/matches'} onClick={() => navigate('/matches')} />
+                        <NavButton icon={Trophy} label="Tablas" active={location.pathname === '/standings'} onClick={() => navigate('/standings')} />
+                        <NavButton icon={Shield} label="Equipos" active={location.pathname === '/teams'} onClick={() => navigate('/teams')} />
+                        <NavButton
+                            icon={Vote}
+                            label="Votaciones"
+                            active={location.pathname === '/voting'}
+                            onClick={() => navigate('/voting')}
+                            hasBadge={(() => {
+                                // Only players and staff (dirigentes) get the notification
+                                if (user?.role !== 'player' && user?.role !== 'dirigente') return false;
+                                return polls.some(p => p.status === 'open' && !userParticipations.includes(p.id));
+                            })()}
+                        />
+                    </div>
                 </div>
             )}
         </div>

@@ -36,10 +36,48 @@ const GlobalHeader = ({ user, onSettingsClick, onProfileClick, onHomeClick }) =>
 
     return (
         <header className="fade-in" style={{ marginBottom: 'var(--spacing-xl)', paddingTop: 'var(--spacing-lg)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div onClick={onHomeClick} style={{ cursor: 'pointer' }}>
-                <img src="/logo.png" alt="Copa Delta" style={{ height: '90px', objectFit: 'contain', transition: 'transform 0.2s' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <div onClick={onHomeClick} style={{ cursor: 'pointer', flexShrink: 0 }}>
+                    <img src="/logo.png" alt="Copa Delta" style={{ height: '70px', objectFit: 'contain', transition: 'transform 0.2s' }} />
+                </div>
+
+                {/* Banco Pro Credit Sponsor Logo - Adjacent to Main Logo */}
+                <a
+                    href="https://bancoprocredit.com.ec/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(255,255,255,0.03)',
+                        padding: '6px 12px',
+                        borderRadius: '10px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        transition: 'all 0.3s ease',
+                        textDecoration: 'none',
+                        height: '40px'
+                    }}
+                    onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
+                    }}
+                >
+                    <img
+                        src="/sponsor_procredit.png"
+                        alt="Banco Pro Credit"
+                        style={{ height: '22px', objectFit: 'contain' }}
+                    />
+                </a>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                 {getRoleBadge()}
 
                 {/* Profile Access Button */}
@@ -75,7 +113,7 @@ const GlobalHeader = ({ user, onSettingsClick, onProfileClick, onHomeClick }) =>
                     <Settings size={18} color="var(--text-secondary)" />
                 </div>
             </div>
-        </header>
+        </header >
     );
 };
 

@@ -171,6 +171,48 @@ const UniversalProfileView = ({ profileId, onBack, user, teams, officials = [], 
                 </div>
             )}
 
+            {/* NETWORKING INFO (If opted in) */}
+            {person.is_networker && (
+                <div className="glass-card" style={{
+                    marginBottom: '20px',
+                    border: '1px solid var(--primary)',
+                    background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.05) 0%, transparent 100%)'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                        <Users size={16} color="var(--primary)" />
+                        <span style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '1px' }}>Comunidad Networking</span>
+                    </div>
+
+                    <div style={{ marginBottom: '15px' }}>
+                        <div style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Especialidad / Servicios</div>
+                        <div style={{ fontSize: '16px', fontWeight: '800', color: 'white' }}>{person.network_keywords || person.job || "Servicios Profesionales"}</div>
+                    </div>
+
+                    <a
+                        href={person.pref_contact === 'whatsapp' ? `https://wa.me/${person.phone?.replace(/\D/g, '')}` : (person.pref_contact === 'email' ? `mailto:${person.email}` : `https://instagram.com/${person.instagram?.replace('@', '')}`)}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            width: '100%',
+                            padding: '12px',
+                            background: 'var(--primary)',
+                            borderRadius: '10px',
+                            color: 'black',
+                            fontWeight: 'bold',
+                            textDecoration: 'none',
+                            fontSize: '14px'
+                        }}
+                    >
+                        <MessageCircle size={18} />
+                        Contactar vía {person.pref_contact === 'whatsapp' ? 'WhatsApp' : (person.pref_contact === 'email' ? 'Email' : 'Instagram')}
+                    </a>
+                </div>
+            )}
+
             {/* BIO & INFO (Always visible with placeholders) */}
             <div className="glass-card" style={{ marginBottom: '20px' }}>
                 <div style={{ marginBottom: '15px' }}>
